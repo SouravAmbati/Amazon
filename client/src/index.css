@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: false;
+}
+/* .swiper {
+  --swiper-navigation-color: white;
+} */
+.swiper-button-prev,
+.swiper-button-next {
+  display: none;
+}
+/* Chrome, Safari, Edge */
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* Firefox */
+html {
+  scrollbar-width: none;
+}
+body {
+  background: linear-gradient(
+    to bottom,
+    #e3e6e6 0%,
+    #f3f3f3 30%,
+    #ffffff 100%
+  );
+}

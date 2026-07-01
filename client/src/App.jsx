@@ -1,8 +1,14 @@
 import React from 'react'
+import Home from './pages/Home/Home.jsx'
+import DesktopOnly from './components/screen/MobielOnly.jsx'
 
 const App = () => {
   return (
-    <div>App</div>
+    <div>
+      <DesktopOnly>
+        <Home />
+      </DesktopOnly>
+    </div>
   )
 }
 
