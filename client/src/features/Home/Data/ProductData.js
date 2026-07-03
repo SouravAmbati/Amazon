@@ -18,36 +18,75 @@ const categories = [
   "Music",
   "Garden",
   "Kitchen Appliances",
-  "Travel"
+  "Travel",
 ];
 
 const brands = [
-  "Sony", "Samsung", "Apple", "Nike", "Adidas", "Puma", "Dell",
-  "HP", "Lenovo", "Asus", "Boat", "JBL", "Canon", "Logitech",
-  "Philips", "Prestige", "Milton", "Cello", "Pigeon", "Havells"
+  "Sony",
+  "Samsung",
+  "Apple",
+  "Nike",
+  "Adidas",
+  "Puma",
+  "Dell",
+  "HP",
+  "Lenovo",
+  "Asus",
+  "Boat",
+  "JBL",
+  "Canon",
+  "Logitech",
+  "Philips",
+  "Prestige",
+  "Milton",
+  "Cello",
+  "Pigeon",
+  "Havells",
 ];
 
 const productTypes = [
-  "Headphones", "Laptop", "Keyboard", "Mouse", "Monitor", "Shoes",
-  "T-Shirt", "Watch", "Backpack", "Mixer", "Bottle", "Camera",
-  "Speaker", "Tablet", "Smartphone", "Printer", "Chair", "Desk",
-  "Football", "Face Wash", "Shampoo", "Toy Car", "Coffee Mug",
-  "Air Fryer", "SSD", "Router", "TV", "Microwave", "Cookware Set",
-  "Power Bank"
+  "Headphones",
+  "Laptop",
+  "Keyboard",
+  "Mouse",
+  "Monitor",
+  "Shoes",
+  "T-Shirt",
+  "Watch",
+  "Backpack",
+  "Mixer",
+  "Bottle",
+  "Camera",
+  "Speaker",
+  "Tablet",
+  "Smartphone",
+  "Printer",
+  "Chair",
+  "Desk",
+  "Football",
+  "Face Wash",
+  "Shampoo",
+  "Toy Car",
+  "Coffee Mug",
+  "Air Fryer",
+  "SSD",
+  "Router",
+  "TV",
+  "Microwave",
+  "Cookware Set",
+  "Power Bank",
 ];
 
 const data = Array.from({ length: 1000 }, (_, index) => ({
   id: index + 1,
   category: `${categories[index % categories.length]} ${Math.floor(index / categories.length) + 1}`,
   products: Array.from({ length: 4 }, (_, productIndex) => ({
-    id: (index * 4) + productIndex + 1,
-    name: `${
-      brands[(index + productIndex) % brands.length]
-    } ${
+    id: index * 4 + productIndex + 1,
+    name: `${brands[(index + productIndex) % brands.length]} ${
       productTypes[(index * 4 + productIndex) % productTypes.length]
     }`,
-    image: `https://picsum.photos/seed/product-${index + 1}-${productIndex + 1}/300/300`
-  }))
+    image: `https://picsum.photos/seed/product-${index + 1}-${productIndex + 1}/300/300`,
+  })),
 }));
 
 export default data;

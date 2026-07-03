@@ -7,19 +7,22 @@ import data from '../../features/Home/Data/ProductData.js'
 
 const Home = () => {
   const [products,setProducts]=useState([]);
+  const [productName,setProductNames]=useState([]);
   useEffect(()=>{
     function fetchProducts(){
       if(!data){
         console.log("Data is not available")
       }else{
         setProducts(data);
+         const allProducts = data.flatMap(category => category.products);
+        setProductNames(allProducts);
       }
     }
     fetchProducts();
   },[])
   return (
     <div className="min-h-screen bg-[linear-gradient(to_bottom,#e3e6e6_0%,#f3f3f3_30%,#ffffff_100%)]">
-      <Navbar />
+      <Navbar products={productName}/>
 
       {/* Hero Banner */}
       <Carousel />

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
+import data from "../../features/Home/Data/ProductData";
 
 const suggestions = [
   "iPhone 16",
@@ -16,12 +17,12 @@ const suggestions = [
   "Printer",
 ];
 
-const Navbar = () => {
+const Navbar = ({products}) => {
   const [search, setSearch] = useState("");
 
-  const filteredSuggestions = suggestions.filter((item) =>
-    item.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredSuggestions = products.filter(product =>
+  product.name.toLowerCase().includes(search.toLowerCase())
+).slice(0, 10);
 
   return (
     <div className="navbar bg-white shadow-sm px-6  md:px-6">
@@ -46,14 +47,14 @@ const Navbar = () => {
           {search.length > 0 && (
             <div className="absolute top-12 left-0 w-full bg-white border border-gray-200 rounded-md shadow-xl z-50 overflow-hidden">
               {filteredSuggestions.length > 0 ? (
-                filteredSuggestions.map((item) => (
+                filteredSuggestions.map((product) => (
                   <div
-                    key={item}
-                    onClick={() => setSearch(item)}
+                    key={product.id}
+                    onClick={() => setSearch(product)}
                     className="px-4 py-3 flex items-center gap-3 hover:bg-gray-100 cursor-pointer transition"
                   >
                     <FaSearch className="text-gray-400 text-sm" />
-                    <span>{item}</span>
+                    <span>{product.name}</span>
                   </div>
                 ))
               ) : (
