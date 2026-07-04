@@ -19,7 +19,7 @@
 html {
   scrollbar-width: none;
 }
-body {
+.gradient {
   background: linear-gradient(
     to bottom,
     #e3e6e6 0%,

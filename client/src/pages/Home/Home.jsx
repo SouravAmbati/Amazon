@@ -21,7 +21,7 @@ const Home = () => {
     fetchProducts();
   },[])
   return (
-    <div className="min-h-screen bg-[linear-gradient(to_bottom,#e3e6e6_0%,#f3f3f3_30%,#ffffff_100%)]">
+    <div className="gradient min-h-screen bg-[linear-gradient(to_bottom,#e3e6e6_0%,#f3f3f3_30%,#ffffff_100%)]">
       <Navbar products={productName}/>
 
       {/* Hero Banner */}
