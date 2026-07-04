@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from 'react-router-dom';
 
 const CategoryCard = ({categoryName,product}) => {
 
@@ -11,10 +12,12 @@ const CategoryCard = ({categoryName,product}) => {
       <div className="grid grid-cols-2 gap-3">
         {product.products.map((product, index) => (
           <div key={index}>
+          <Link to={`/products/${product.id}`}>
             <img
-              src={product.image}
+              src={product.images[0]}
               className="w-full cursor-pointer aspect-square object-cover"
             />
+          </Link>
 
             <p className="mt-2 text-sm font-medium">
               {product.name}
