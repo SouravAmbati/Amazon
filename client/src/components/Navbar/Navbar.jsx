@@ -1,23 +1,9 @@
 import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import data from "../../features/Home/Data/ProductData";
+import { Link } from "react-router-dom";
 
-const suggestions = [
-  "iPhone 16",
-  "Samsung Galaxy S25",
-  "MacBook Air M4",
-  "Gaming Mouse",
-  "Laptop Stand",
-  "Bluetooth Speaker",
-  "Sony Headphones",
-  "Nike Shoes",
-  "Apple Watch",
-  "Wireless Keyboard",
-  "Monitor",
-  "Printer",
-];
-
-const Navbar = ({products}) => {
+const Navbar = ({products=[],show=true}) => {
   const [search, setSearch] = useState("");
 
   const filteredSuggestions = products.filter(product =>
@@ -32,7 +18,8 @@ const Navbar = ({products}) => {
       </div>
 
       {/* Center */}
-      <div className="navbar-center">
+      {
+        show?<div className="navbar-center">
         <div className="relative w-full md:w-[600px] lg:w-[700px]">
           <input
             type="text"
@@ -65,13 +52,14 @@ const Navbar = ({products}) => {
             </div>
           )}
         </div>
-      </div>
+      </div>:''
+      }
 
       {/* Right */}
       <div className="navbar-end gap-3"> 
         {/* Cart */}
         <div className=" btn btn-ghost btn-circle hover:bg-transparent h-5 w-5 md:h-6 md:w-6 hover:border-transparent hover:shadow-none active:bg-transparent focus:bg-transparent focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
-          <div className="indicator">
+          <Link to={"/cart"}><div className="indicator">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6"
@@ -90,7 +78,7 @@ const Navbar = ({products}) => {
             <span className="badge badge-sm indicator-item border-none ">
               8
             </span>
-          </div>
+          </div></Link>
         </div>
 
         {/* Avatar */}

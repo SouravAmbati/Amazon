@@ -9,15 +9,28 @@
 .swiper-button-next {
   display: none;
 }
-/* Chrome, Safari, Edge */
+/* Chrome, Edge */
 ::-webkit-scrollbar {
-  width: 0;
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
   background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 120, 0.7);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 120, 120, 1);
 }
 
 /* Firefox */
 html {
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120,120,120,.7) transparent;
 }
 .gradient {
   background: linear-gradient(

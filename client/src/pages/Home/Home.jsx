@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import Navbar from '../../components/Navbar/Navbar.jsx'
 import Carousel from '../../features/Home/Components/Carousel/carousel.jsx'
 import CategoryCard from '../../features/Home/Components/CategoryCard/CategoryCard.jsx'
-import Footer from '../../features/Home/Components/Footer/Footer.jsx'
 import data from '../../features/Home/Data/ProductData.js'
 
 const Home = () => {
@@ -42,7 +41,6 @@ md:-mt-60">
           }
         </div>
       </div>
-      <Footer/>
     </div>
   )
 }
