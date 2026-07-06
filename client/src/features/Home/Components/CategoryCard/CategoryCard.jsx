@@ -12,7 +12,7 @@ const CategoryCard = ({categoryName,product}) => {
       <div className="grid grid-cols-2 gap-3">
         {product.products.map((product, index) => (
           <div key={index}>
-          <Link to={`/products/${product.id}`}>
+          <Link to={`/product/${product.id}`}>
             <img
               src={product.images[0]}
               className="w-full cursor-pointer aspect-square object-cover"
