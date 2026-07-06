@@ -5,6 +5,7 @@ import { Route, Routes } from 'react-router-dom'
 import ProductDetail from './pages/ProductDetail/productDetail.jsx'
 import Footer from './features/Home/Components/Footer/Footer.jsx'
 import CartPage from './pages/Cart/CartPage.jsx'
+import CheckoutPage from './pages/Checkout/CheckoutPage.jsx'
 
 const App = () => {
   return (
@@ -18,6 +19,9 @@ const App = () => {
         </DesktopOnly>} />
         <Route path="/cart" element={<DesktopOnly>
           <CartPage />
+        </DesktopOnly>} />
+          <Route path="/payment" element={<DesktopOnly>
+          <CheckoutPage />
         </DesktopOnly>} />
       </Routes>
       <Footer/>

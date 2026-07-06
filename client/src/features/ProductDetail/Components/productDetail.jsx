@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import data from "../../Home/Data/ProductData";
 import { StarIcon } from '@heroicons/react/20/solid'
 import Cart from '../../Cart/Components/Cart';
@@ -136,18 +136,17 @@ const ProductDetails = () => {
                             )}
 
                             <button
-                             onClick={() => sendBoolean(true)}
                                 type="submit"
                                 className="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 hover:cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden"
                             >
                                 Add to Cart
                             </button>
-                            <button
+                           <Link to={'/payment'}><button
                                 type="submit"
                                 className="mt-2 flex w-full items-center justify-center rounded-md border border-indigo-600  px-8 py-3 text-base font-medium text-black hover:cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden"
                             >
                                 Buy Now
-                            </button>
+                            </button></Link> 
                         </form>
                     </div>
 
