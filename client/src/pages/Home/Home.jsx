@@ -3,6 +3,7 @@ import Navbar from '../../components/Navbar/Navbar.jsx'
 import Carousel from '../../features/Home/Components/Carousel/carousel.jsx'
 import CategoryCard from '../../features/Home/Components/CategoryCard/CategoryCard.jsx'
 import data from '../../features/Home/Data/ProductData.js'
+import FloatingFilter from '../../features/Home/Components/Filters/Filter.jsx'
 
 const Home = () => {
   const [products,setProducts]=useState([]);
@@ -41,6 +42,7 @@ md:-mt-60">
           }
         </div>
       </div>
+      <FloatingFilter/>
     </div>
   )
 }
