@@ -6,6 +6,7 @@ import ProductDetail from './pages/ProductDetail/productDetail.jsx'
 import Footer from './features/Home/Components/Footer/Footer.jsx'
 import CartPage from './pages/Cart/CartPage.jsx'
 import CheckoutPage from './pages/Checkout/CheckoutPage.jsx'
+import SpecificCategoryProductPage from './pages/ProductDetail/SpecificCategoryProduct.jsx'
 
 const App = () => {
   return (
@@ -22,6 +23,9 @@ const App = () => {
         </DesktopOnly>} />
           <Route path="/payment" element={<DesktopOnly>
           <CheckoutPage />
+        </DesktopOnly>} />
+        <Route path="/product" element={<DesktopOnly>
+          <SpecificCategoryProductPage />
         </DesktopOnly>} />
       </Routes>
       <Footer/>
