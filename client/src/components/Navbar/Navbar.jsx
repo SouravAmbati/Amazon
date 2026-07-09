@@ -3,10 +3,20 @@ import { FaSearch } from "react-icons/fa";
 import data from "../../features/Home/Data/ProductData";
 import { Link } from "react-router-dom";
 
-const Navbar = ({products=[],show=true}) => {
+const Navbar = ({products=[],show=true,filter}) => {
   const [search, setSearch] = useState("");
+  const allProducts = data.flatMap(category => category.products);
+  const searchableProducts = filter
+  ? allProducts.filter(product => {
+      const category = product.attributes.find(
+        attr => attr.name === "Category"
+      );
 
-  const filteredSuggestions = products.filter(product =>
+      return category?.values[0] === filter;
+    })
+  : allProducts;
+
+  const filteredSuggestions = searchableProducts.filter(product =>
   product.name.toLowerCase().includes(search.toLowerCase())
 ).slice(0, 10);
 

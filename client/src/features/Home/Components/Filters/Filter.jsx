@@ -38,7 +38,7 @@ const FloatingFilter = () => {
       {categories.map((item) => (
         <Link
           key={item}
-          to={`/product?type=${item}&limit=10`}
+          to={`/product?type=${item}&limit=12`}
           className="
             btn
             border-0
