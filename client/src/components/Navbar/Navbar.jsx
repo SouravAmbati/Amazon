@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import data from "../../features/Home/Data/ProductData";
-import { Link } from "react-router-dom";
+import { Link,useNavigate  } from "react-router-dom";
 
 const Navbar = ({products=[],show=true,filter}) => {
   const [search, setSearch] = useState("");
   const allProducts = data.flatMap(category => category.products);
+  const navigate = useNavigate();
   const searchableProducts = filter
   ? allProducts.filter(product => {
       const category = product.attributes.find(
@@ -47,7 +48,10 @@ const Navbar = ({products=[],show=true,filter}) => {
                 filteredSuggestions.map((product) => (
                   <div
                     key={product.id}
-                    onClick={() => setSearch(product)}
+                     onClick={() => {
+                      setSearch("");
+                      navigate(`/product/${product.id}`);
+                    }}
                     className="px-4 py-3 flex items-center gap-3 hover:bg-gray-100 cursor-pointer transition"
                   >
                     <FaSearch className="text-gray-400 text-sm" />
