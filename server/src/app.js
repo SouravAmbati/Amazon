@@ -4,6 +4,7 @@ import cors from "cors";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
+import Authrouter from "./modules/auth/auth.routes.js";
 
 const app = express();
 
@@ -18,5 +19,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(morgan("dev"));
+
+app.use("/api/auth",Authrouter)
 
 export default app;

@@ -1,16 +1,18 @@
 import { authService } from "./auth.service.js";
+import { validate } from "../../middlewares/validation.middleware.js";
 
 export async function register(
     req,
     res,
     next
 ){
+    console.log(req.validated);
 
     try{
 
         const result=
             await authService.register(
-                req.validated.body
+                req.validated
             );
 
         res.status(201).json(result);
