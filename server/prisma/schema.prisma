@@ -28,6 +28,8 @@ enum VerificationChallengeType {
 model User {
   id              String     @id @default(uuid()) @db.Uuid
   email           String     @unique @db.VarChar(320)
+  firstName         String
+  lastName          String?
   emailVerifiedAt DateTime?   @map("email_verified_at") @db.Timestamptz(6)
   status          UserStatus @default(ACTIVE)
 
@@ -61,7 +63,7 @@ model VerificationChallenge {
   userId String                    @map("user_id") @db.Uuid
   type   VerificationChallengeType
 
-  codeHash String @map("code_hash") @db.Text
+  hashedCode String @map("code_hash") @db.Text
 
   expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
   consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
@@ -69,6 +71,7 @@ model VerificationChallenge {
   attemptCount Int @default(0) @map("attempt_count")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -81,12 +84,13 @@ model PasswordResetToken {
   id     String @id @default(uuid()) @db.Uuid
   userId String @map("user_id") @db.Uuid
 
-  tokenHash String @unique @map("token_hash") @db.Text
+  hashedToken String @unique @map("token_hash") @db.Text
 
   expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
   consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
