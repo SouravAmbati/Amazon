@@ -1,4 +1,5 @@
 import { prisma } from "../../config/Prisma.js";
+import { ConflictError } from "../../shared/errors/ConflictError.js";
 import { hashPassword } from "./services/password.service.js";
 
 async function register(data) {
@@ -9,7 +10,7 @@ async function register(data) {
   });
 
   if (existingUser) {
-    throw new Error("EMAIL_ALREADY_EXISTS");
+    throw new ConflictError("EMAIL_ALREADY_EXISTS");
   }
 
   const passwordHash = await hashPassword(data.password);

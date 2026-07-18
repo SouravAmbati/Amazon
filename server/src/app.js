@@ -5,6 +5,7 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import Authrouter from "./modules/auth/auth.routes.js";
+import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 
@@ -19,6 +20,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(morgan("dev"));
+
+app.use(errorHandler);
 
 app.use("/api/auth",Authrouter)
 

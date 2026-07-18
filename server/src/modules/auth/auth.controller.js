@@ -6,7 +6,6 @@ export async function register(
     res,
     next
 ){
-    console.log(req.validated);
 
     try{
 
