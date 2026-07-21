@@ -25,3 +25,14 @@ export async function register(
     }
 
 }
+export async function verifyEmail(req, res, next) {
+    try {
+        const result = await authService.verifyEmail(
+            req.validated.body
+        );
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}

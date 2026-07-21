@@ -29,3 +29,16 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "Password must contain a number")
     .regex(/[^A-Za-z0-9]/, "Password must contain a special character")
 });
+export const verifyEmailSchema = z.object({
+    body: z.object({
+        email: z
+            .string()
+            .trim()
+            .toLowerCase()
+            .email(),
+
+        otp: z
+            .string()
+            .regex(/^\d{6}$/, "OTP must be exactly 6 digits"),
+    }),
+});
