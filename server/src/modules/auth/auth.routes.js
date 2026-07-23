@@ -1,8 +1,8 @@
 import { Router } from "express";
 
-import { register, verifyEmail } from "./auth.controller.js";
+import { login, register, verifyEmail } from "./auth.controller.js";
 import { validate } from "../../middlewares/validation.middleware.js";
-import { registerSchema, verifyEmailSchema } from "./auth.validation.js";
+import { loginSchema, registerSchema, verifyEmailSchema } from "./auth.validation.js";
 
 const Authrouter = Router();
 
@@ -15,6 +15,11 @@ Authrouter.post(
     "/verify-email",
     validate(verifyEmailSchema),
     verifyEmail
+);
+Authrouter.post(
+    "/login",
+    validate(loginSchema),
+    login
 );
 
 export default Authrouter;

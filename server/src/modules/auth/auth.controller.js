@@ -36,3 +36,21 @@ export async function verifyEmail(req, res, next) {
         next(error);
     }
 }
+export async function login(
+    req,
+    res,
+    next
+) {
+    try {
+
+        const result =
+            await authService.login(
+                req.validated
+            );
+
+        res.status(200).json(result);
+
+    } catch (error) {
+        next(error);
+    }
+}

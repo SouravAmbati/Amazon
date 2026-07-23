@@ -3,7 +3,7 @@ import { BadRequestError } from "../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../shared/errors/ConflictError.js";
 import { sendVerificationEmail } from "./services/email.service.js";
 import { generateOTP } from "./services/otp.service.js";
-import { hashPassword } from "./services/password.service.js";
+import { hashPassword, verifyPassword } from "./services/password.service.js";
 import {
   createChallenge,
   verifyChallenge,
@@ -106,8 +106,60 @@ async function verifyEmail(data) {
     message: "Email verified successfully.",
   };
 }
+async function login(data) {
+
+    const email = data.email
+        .trim()
+        .toLowerCase();
+
+    const user = await prisma.user.findUnique({
+        where: {
+            email,
+        },
+        include: {
+            credential: true,
+        },
+    });
+
+    if (!user) {
+        throw new BadRequestError(
+            "INVALID_EMAIL_OR_PASSWORD"
+        );
+    }
+
+    if (!user.emailVerifiedAt) {
+        throw new BadRequestError(
+            "EMAIL_NOT_VERIFIED"
+        );
+    }
+
+    if (user.status !== "ACTIVE") {
+        throw new BadRequestError(
+            "ACCOUNT_DISABLED"
+        );
+    }
+
+    const validPassword =
+        await verifyPassword(
+            data.password,
+            user.credential.passwordHash
+        );
+
+    if (!validPassword) {
+        throw new BadRequestError(
+            "INVALID_EMAIL_OR_PASSWORD"
+        );
+    }
+
+    return {
+        success: true,
+        message: "Login successful.",
+    };
+
+}
 
 export const authService = {
   register,
   verifyEmail,
+  login
 };
