@@ -1,56 +1,39 @@
 import { authService } from "./auth.service.js";
 import { validate } from "../../middlewares/validation.middleware.js";
 
-export async function register(
-    req,
-    res,
-    next
-){
+export async function register(req, res, next) {
+  try {
+    const result = await authService.register(req.validated);
 
-    try{
-
-        const result=
-            await authService.register(
-                req.validated
-            );
-
-        res.status(201).json(result);
-
-    }
-
-    catch(error){
-
-        next(error);
-
-    }
-
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
 }
 export async function verifyEmail(req, res, next) {
-    try {
-        const result = await authService.verifyEmail(
-            req.validated.body
-        );
+  try {
+    const result = await authService.verifyEmail(req.validated.body);
 
-        res.status(200).json(result);
-    } catch (error) {
-        next(error);
-    }
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
 }
-export async function login(
-    req,
-    res,
-    next
-) {
-    try {
+export async function login(req, res, next) {
+  try {
+    const result = await authService.login(req.validated);
 
-        const result =
-            await authService.login(
-                req.validated
-            );
+    res.cookie("sid", result.sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
 
-        res.status(200).json(result);
-
-    } catch (error) {
-        next(error);
-    }
+    delete result.sessionId;
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
 }
