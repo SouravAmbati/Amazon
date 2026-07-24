@@ -4,6 +4,7 @@ import { ConflictError } from "../../shared/errors/ConflictError.js";
 import { sendVerificationEmail } from "./services/email.service.js";
 import { generateOTP } from "./services/otp.service.js";
 import { hashPassword, verifyPassword } from "./services/password.service.js";
+import { createSession } from "./services/session.service.js";
 import {
   createChallenge,
   verifyChallenge,
@@ -150,10 +151,11 @@ async function login(data) {
             "INVALID_EMAIL_OR_PASSWORD"
         );
     }
-
+    const sessionId = await createSession(user.id);
     return {
         success: true,
         message: "Login successful.",
+        sessionId,
     };
 
 }
