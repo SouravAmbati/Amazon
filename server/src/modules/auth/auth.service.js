@@ -4,7 +4,8 @@ import { ConflictError } from "../../shared/errors/ConflictError.js";
 import { sendVerificationEmail } from "./services/email.service.js";
 import { generateOTP } from "./services/otp.service.js";
 import { hashPassword, verifyPassword } from "./services/password.service.js";
-import { createSession } from "./services/session.service.js";
+import { createSession, deleteSession } from "./services/session.service.js";
+
 import {
   createChallenge,
   verifyChallenge,
@@ -160,8 +161,18 @@ async function login(data) {
 
 }
 
+export async function logout(sessionId) {
+    await deleteSession(sessionId);
+
+    return {
+        success: true,
+        message: "Logout successful.",
+    };
+}
+
 export const authService = {
   register,
   verifyEmail,
-  login
+  login,
+  logout
 };

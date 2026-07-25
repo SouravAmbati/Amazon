@@ -37,3 +37,19 @@ export async function login(req, res, next) {
     next(error);
   }
 }
+export async function logout(req, res, next) {
+    try {
+        const result = await authService.logout(req.session.id);
+
+        res.clearCookie("sid", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+        });
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}

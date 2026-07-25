@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { login, register, verifyEmail } from "./auth.controller.js";
+import { login, logout, register, verifyEmail } from "./auth.controller.js";
 import { validate } from "../../middlewares/validation.middleware.js";
 import { loginSchema, registerSchema, verifyEmailSchema } from "./auth.validation.js";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
@@ -30,6 +30,11 @@ Authrouter.get(
         res.json(req.user);
 
     }
+);
+Authrouter.post(
+    "/logout",
+    requireAuth,
+    logout
 );
 
 export default Authrouter;
