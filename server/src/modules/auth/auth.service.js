@@ -1,10 +1,12 @@
 import { prisma } from "../../config/Prisma.js";
+import { AUTH_USER_SELECT } from "../../shared/constants/userSelect.js";
 import { BadRequestError } from "../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../shared/errors/ConflictError.js";
 import { sendVerificationEmail } from "./services/email.service.js";
 import { generateOTP } from "./services/otp.service.js";
 import { hashPassword, verifyPassword } from "./services/password.service.js";
-import { createSession } from "./services/session.service.js";
+import { createSession, deleteSession } from "./services/session.service.js";
+
 import {
   createChallenge,
   verifyChallenge,
@@ -160,8 +162,36 @@ async function login(data) {
 
 }
 
+export async function logout(sessionId) {
+    await deleteSession(sessionId);
+
+    return {
+        success: true,
+        message: "Logout successful.",
+    };
+}
+async function me(userId) {
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId,
+        },
+        select:AUTH_USER_SELECT
+    });
+
+    if (!user) {
+        throw new NotFoundError("User not found.");
+    }
+
+    return {
+        success: true,
+        data: user,
+    };
+}
+
 export const authService = {
   register,
   verifyEmail,
-  login
+  login,
+  logout,
+  me
 };

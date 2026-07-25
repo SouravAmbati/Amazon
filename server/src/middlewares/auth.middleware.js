@@ -30,6 +30,10 @@ export async function requireAuth(req, res, next) {
     }
 
     req.user = user;
+    req.session = {
+        id: sessionId,
+        userId: session.userId,
+    };
 
     next();
   } catch (error) {
