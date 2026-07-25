@@ -1,4 +1,5 @@
 import { prisma } from "../../config/Prisma.js";
+import { AUTH_USER_SELECT } from "../../shared/constants/userSelect.js";
 import { BadRequestError } from "../../shared/errors/BadRequestError.js";
 import { ConflictError } from "../../shared/errors/ConflictError.js";
 import { sendVerificationEmail } from "./services/email.service.js";
@@ -169,10 +170,28 @@ export async function logout(sessionId) {
         message: "Logout successful.",
     };
 }
+async function me(userId) {
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId,
+        },
+        select:AUTH_USER_SELECT
+    });
+
+    if (!user) {
+        throw new NotFoundError("User not found.");
+    }
+
+    return {
+        success: true,
+        data: user,
+    };
+}
 
 export const authService = {
   register,
   verifyEmail,
   login,
-  logout
+  logout,
+  me
 };

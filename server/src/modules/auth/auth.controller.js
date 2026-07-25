@@ -53,3 +53,12 @@ export async function logout(req, res, next) {
         next(error);
     }
 }
+export async function me(req, res, next) {
+    try {
+        const result = await authService.me(req.user.id);
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}

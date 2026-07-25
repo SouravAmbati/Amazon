@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { login, logout, register, verifyEmail } from "./auth.controller.js";
+import { login, logout, me, register, verifyEmail } from "./auth.controller.js";
 import { validate } from "../../middlewares/validation.middleware.js";
 import { loginSchema, registerSchema, verifyEmailSchema } from "./auth.validation.js";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
@@ -25,11 +25,7 @@ Authrouter.post(
 Authrouter.get(
     "/me",
     requireAuth,
-    (req, res) => {
-
-        res.json(req.user);
-
-    }
+    me
 );
 Authrouter.post(
     "/logout",
