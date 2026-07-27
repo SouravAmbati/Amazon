@@ -61,3 +61,12 @@ export const createAddressSchema = z.object({
         "OTHER",
     ]).default("HOME"),
 });
+export const updateAddressSchema =
+    createAddressSchema
+        .partial()
+        .refine(
+            (data) => Object.keys(data).length > 0,
+            {
+                message: "At least one field must be provided.",
+            }
+        );

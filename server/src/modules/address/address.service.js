@@ -62,3 +62,79 @@ export async function getAddress(userId, addressId) {
         data: address,
     };
 }
+export async function updateAddress(userId, addressId, data) {
+    const existingAddress = await prisma.address.findFirst({
+        where: {
+            id: addressId,
+            userId,
+        },
+    });
+
+    if (!existingAddress) {
+        throw new NotFoundError("Address not found.");
+    }
+
+    const updatedAddress = await prisma.address.update({
+        where: {
+            id: addressId,
+        },
+        data,
+        select: ADDRESS_SELECT,
+    });
+
+    return {
+        success: true,
+        message: "Address updated successfully.",
+        data: updatedAddress,
+    };
+}
+export async function deleteAddress(userId, addressId) {
+    return prisma.$transaction(async (tx) => {
+
+        const address = await tx.address.findFirst({
+            where: {
+                id: addressId,
+                userId,
+            },
+        });
+
+        if (!address) {
+            throw new NotFoundError("Address not found.");
+        }
+
+        await tx.address.delete({
+            where: {
+                id: addressId,
+            },
+        });
+
+        if (address.isDefault) {
+
+            const nextAddress =
+                await tx.address.findFirst({
+                    where: {
+                        userId,
+                    },
+                    orderBy: {
+                        createdAt: "asc",
+                    },
+                });
+
+            if (nextAddress) {
+                await tx.address.update({
+                    where: {
+                        id: nextAddress.id,
+                    },
+                    data: {
+                        isDefault: true,
+                    },
+                });
+            }
+        }
+
+        return {
+            success: true,
+            message: "Address deleted successfully.",
+        };
+    });
+}

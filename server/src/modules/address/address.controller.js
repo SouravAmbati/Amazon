@@ -36,3 +36,28 @@ export async function getAddress(req, res, next) {
         next(error);
     }
 }
+export async function updateAddress(req, res, next) {
+    try {
+        const result = await addressService.updateAddress(
+            req.user.id,
+            req.params.id,
+            req.validated
+        );
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
+export async function deleteAddress(req, res, next) {
+    try {
+        const result = await addressService.deleteAddress(
+            req.user.id,
+            req.params.id
+        );
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
