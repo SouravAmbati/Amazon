@@ -1,5 +1,6 @@
 import { prisma } from "../../config/Prisma.js";
 import { ADDRESS_SELECT } from "../../shared/constants/address-select.js";
+import { NotFoundError } from "../../shared/errors/NotFoundError.js";
 
 export async function createAddress(userId, data) {
   await prisma.$transaction(async (tx) => {
@@ -41,5 +42,23 @@ export async function getAddresses(userId) {
     return {
         success: true,
         data: addresses,
+    };
+}
+export async function getAddress(userId, addressId) {
+    const address = await prisma.address.findFirst({
+        where: {
+            id: addressId,
+            userId,
+        },
+        select: ADDRESS_SELECT,
+    });
+
+    if (!address) {
+        throw new NotFoundError("Address not found.");
+    }
+
+    return {
+        success: true,
+        data: address,
     };
 }

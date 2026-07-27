@@ -18,5 +18,9 @@ addressRouter.get(
     requireAuth,
     controller.getAddresses
 );
-
+addressRouter.get(
+    "/:id",
+    requireAuth,
+    controller.getAddress
+);
 export default addressRouter;

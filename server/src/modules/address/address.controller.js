@@ -24,3 +24,15 @@ export async function getAddresses(req, res, next) {
         next(error);
     }
 }
+export async function getAddress(req, res, next) {
+    try {
+        const result = await addressService.getAddress(
+            req.user.id,
+            req.params.id
+        );
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
