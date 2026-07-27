@@ -1,4 +1,5 @@
 import { prisma } from "../../config/Prisma.js";
+import { ADDRESS_SELECT } from "../../shared/constants/address-select.js";
 
 export async function createAddress(userId, data) {
   await prisma.$transaction(async (tx) => {
@@ -20,4 +21,25 @@ export async function createAddress(userId, data) {
     message: "Address created successfully.",
     data: address,
   };
+}
+export async function getAddresses(userId) {
+    const addresses = await prisma.address.findMany({
+        where: {
+            userId,
+        },
+        select: ADDRESS_SELECT,
+        orderBy: [
+            {
+                isDefault: "desc",
+            },
+            {
+                createdAt: "desc",
+            },
+        ],
+    });
+
+    return {
+        success: true,
+        data: addresses,
+    };
 }

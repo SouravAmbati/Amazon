@@ -13,5 +13,10 @@ addressRouter.post(
     validate(createAddressSchema),
     controller.createAddress
 );
+addressRouter.get(
+    "/",
+    requireAuth,
+    controller.getAddresses
+);
 
 export default addressRouter;

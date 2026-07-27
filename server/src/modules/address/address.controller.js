@@ -15,3 +15,12 @@ export async function createAddress(req, res, next) {
         next(error);
     }
 }
+export async function getAddresses(req, res, next) {
+    try {
+        const result = await addressService.getAddresses(req.user.id);
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
