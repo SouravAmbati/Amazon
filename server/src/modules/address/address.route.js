@@ -29,4 +29,9 @@ addressRouter.patch(
     validate(updateAddressSchema),
     controller.updateAddress
 );
+addressRouter.delete(
+    "/:id",
+    requireAuth,
+    controller.deleteAddress
+);
 export default addressRouter;
