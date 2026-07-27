@@ -1,0 +1,16 @@
+export const ADDRESS_SELECT = {
+    id: true,
+    fullName: true,
+    phone: true,
+    country: true,
+    addressLine1: true,
+    addressLine2: true,
+    landmark: true,
+    city: true,
+    state: true,
+    postalCode: true,
+    type: true,
+    isDefault: true,
+    createdAt: true,
+    updatedAt: true,
+};
