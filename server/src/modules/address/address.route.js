@@ -34,4 +34,9 @@ addressRouter.delete(
     requireAuth,
     controller.deleteAddress
 );
+addressRouter.patch(
+    "/:id/default",
+    requireAuth,
+    controller.setDefaultAddress
+);
 export default addressRouter;

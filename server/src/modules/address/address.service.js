@@ -138,3 +138,43 @@ export async function deleteAddress(userId, addressId) {
         };
     });
 }
+export async function setDefaultAddress(userId, addressId) {
+    return prisma.$transaction(async (tx) => {
+
+        const address = await tx.address.findFirst({
+            where: {
+                id: addressId,
+                userId,
+            },
+        });
+
+        if (!address) {
+            throw new NotFoundError("Address not found.");
+        }
+
+        await tx.address.updateMany({
+            where: {
+                userId,
+            },
+            data: {
+                isDefault: false,
+            },
+        });
+
+        const updatedAddress = await tx.address.update({
+            where: {
+                id: addressId,
+            },
+            data: {
+                isDefault: true,
+            },
+            select: ADDRESS_SELECT,
+        });
+
+        return {
+            success: true,
+            message: "Default address updated successfully.",
+            data: updatedAddress,
+        };
+    });
+}

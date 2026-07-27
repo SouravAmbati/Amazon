@@ -61,3 +61,15 @@ export async function deleteAddress(req, res, next) {
         next(error);
     }
 }
+export async function setDefaultAddress(req, res, next) {
+    try {
+        const result = await addressService.setDefaultAddress(
+            req.user.id,
+            req.params.id
+        );
+
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
