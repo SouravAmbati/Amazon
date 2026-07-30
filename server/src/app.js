@@ -7,6 +7,7 @@ import morgan from "morgan";
 import Authrouter from "./modules/auth/auth.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import addressRouter from "./modules/address/address.route.js";
+import adminCategoryRouter from "./modules/category/admin.routes.js";
 
 const app = express();
 
@@ -29,5 +30,8 @@ app.use(
     "/api/addresses",
     addressRouter
 );
+// app.use("/api/categories", customerCategoryRoutes);
+
+app.use("/api/admin/categories", adminCategoryRouter);
 
 export default app;
