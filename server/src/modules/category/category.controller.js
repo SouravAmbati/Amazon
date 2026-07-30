@@ -1,0 +1,13 @@
+import * as categoryService from "./category.service.js";
+
+export async function createCategory(req, res, next) {
+    try {
+        const result = await categoryService.createCategory(
+            req.validated
+        );
+
+        res.status(201).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
