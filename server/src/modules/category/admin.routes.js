@@ -10,5 +10,8 @@ adminCategoryRouter.post(
     validate(createCategorySchema),
     controller.createCategory
 );
-
+adminCategoryRouter.get(
+    "/tree",
+    controller.getCategoryTree
+);
 export default adminCategoryRouter;

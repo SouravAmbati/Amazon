@@ -51,3 +51,45 @@ export async function createCategory(data) {
         data: category,
     };
 }
+export async function getCategoryTree() {
+
+    const categories = await prisma.category.findMany({
+        select: CATEGORY_SELECT,
+        orderBy: {
+            name: "asc",
+        },
+    });
+
+    const categoryMap = new Map();
+
+    categories.forEach(category => {
+        categoryMap.set(category.id, {
+            ...category,
+            children: [],
+        });
+    });
+
+    const tree = [];
+
+    categories.forEach(category => {
+
+        const node = categoryMap.get(category.id);
+
+        if (!category.parentId) {
+            tree.push(node);
+            return;
+        }
+
+        const parent = categoryMap.get(category.parentId);
+
+        if (parent) {
+            parent.children.push(node);
+        }
+
+    });
+
+    return {
+        success: true,
+        data: tree,
+    };
+}
