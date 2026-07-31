@@ -11,3 +11,15 @@ export async function createCategory(req, res, next) {
         next(error);
     }
 }
+export async function getCategoryTree(req, res, next) {
+    try {
+
+        const result =
+            await categoryService.getCategoryTree();
+
+        res.status(200).json(result);
+
+    } catch (error) {
+        next(error);
+    }
+}
