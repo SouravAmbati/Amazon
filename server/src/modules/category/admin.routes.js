@@ -14,4 +14,8 @@ adminCategoryRouter.get(
     "/tree",
     controller.getCategoryTree
 );
+adminCategoryRouter.get(
+    "/:slug",
+    controller.getCategoryBySlug
+);
 export default adminCategoryRouter;

@@ -23,3 +23,17 @@ export async function getCategoryTree(req, res, next) {
         next(error);
     }
 }
+export async function getCategoryBySlug(req, res, next) {
+    try {
+
+        const result =
+            await categoryService.getCategoryBySlug(
+                req.params.slug
+            );
+
+        res.status(200).json(result);
+
+    } catch (error) {
+        next(error);
+    }
+}
