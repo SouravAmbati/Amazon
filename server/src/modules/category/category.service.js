@@ -1,4 +1,5 @@
 import { prisma } from "../../config/Prisma.js";
+import { CATEGORY_DETAIL_SELECT } from "../../shared/constants/category-detail-select.js";
 import { CATEGORY_SELECT } from "../../shared/constants/category.select.js";
 import { BadRequestError } from "../../shared/errors/BadRequestError.js";
 import { generateSlug } from "./category.utils.js";
@@ -91,5 +92,23 @@ export async function getCategoryTree() {
     return {
         success: true,
         data: tree,
+    };
+}
+export async function getCategoryBySlug(slug) {
+
+    const category = await prisma.category.findUnique({
+        where: {
+            slug,
+        },
+        select: CATEGORY_DETAIL_SELECT,
+    });
+
+    if (!category) {
+        throw new NotFoundError("Category not found.");
+    }
+
+    return {
+        success: true,
+        data: category,
     };
 }
