@@ -13,3 +13,13 @@ export const createBrandSchema = z.object({
         .url()
         .optional(),
 });
+export const updateBrandSchema =
+    createBrandSchema
+        .partial()
+        .refine(
+            data => Object.keys(data).length > 0,
+            {
+                message:
+                    "At least one field is required.",
+            }
+        );
