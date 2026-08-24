@@ -101,24 +101,15 @@ export async function createProduct(req, res) {
 export async function createProductImageUpload(req, res) {
   const { productId } = req.params;
 
-  const {
-    filename,
-    contentType,
-  } = req.body;
+  const { filename, contentType } = req.body;
 
-  if (
-    typeof filename !== "string" ||
-    filename.trim() === ""
-  ) {
+  if (typeof filename !== "string" || filename.trim() === "") {
     return res.status(400).json({
       error: "filename is required",
     });
   }
 
-  if (
-    typeof contentType !== "string" ||
-    !contentType.startsWith("image/")
-  ) {
+  if (typeof contentType !== "string" || !contentType.startsWith("image/")) {
     return res.status(400).json({
       error: "contentType must be an image type",
     });
@@ -133,7 +124,7 @@ export async function createProductImageUpload(req, res) {
       FROM products
       WHERE id = $1
       `,
-      [productId]
+      [productId],
     );
 
     if (productResult.rowCount === 0) {
@@ -144,33 +135,28 @@ export async function createProductImageUpload(req, res) {
 
     const imageId = crypto.randomUUID();
 
-    const storageKey =
-      `products/${productId}/images/${imageId}/original`;
+    const storageKey = `products/${productId}/images/${imageId}/original`;
 
     const imageResult = await client.query(
       `
       INSERT INTO product_images (
         id,
         product_id,
-        storage_key,
+        original_storage_key,
+        original_filename,
+        mime_type,
         sort_order,
         status
       )
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *;
       `,
-      [
-        imageId,
-        productId,
-        storageKey,
-        0,
-        "PENDING",
-      ]
+      [imageId, productId, storageKey, filename, contentType, 0, 0, "PENDING"],
     );
 
     const image = imageResult.rows[0];
 
-    const uploadUrl =await createUploadUrl({
+    const uploadUrl = await createUploadUrl({
       key: storageKey,
       contentType,
     });
