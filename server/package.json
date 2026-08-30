@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon app.js",
-    "db:migrate": "node src/db/migrate.js"
+    "db:migrate": "node src/db/migration.js"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +21,8 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "nodemon": "^3.1.14",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "uuid": "^14.0.2"
   },
   "devDependencies": {
     "prisma": "^7.9.1"
