@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon app.js",
-    "db:migrate": "node src/db/migrate.js"
+    "db:migrate": "node src/db/migration.js"
   },
   "keywords": [],
   "author": "",
