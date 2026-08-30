@@ -2,7 +2,7 @@ import pool from "../../db/connection.js";
 import { getObjectURL } from "../../storage/uploadURL.js";
 import { v1 as uuidv1 } from 'uuid';
 
-export const createProductUpload=async (req,res)=>{
+export const createProduct=async (req,res)=>{
     const maxSize = 10 * 1024 * 1024;
     const client=await pool.connect();
     try {
@@ -26,6 +26,10 @@ export const createProductUpload=async (req,res)=>{
         //create the object key
         let uuid=uuidv1();
         let objectKey=`product/${uuid}/${image_name}`;
+        //upload image storage key to image table 
+        const imageId=await client.query("INSERT INTO images(storage_key) VALUES($1) RETURNING id;",[objectKey]);
+        //update the id of the img in product table
+        await client.query("UPDATE product SET img=$1 WHERE id=$2",[imageId.rows[0].id,productId.rows[0].id]);
         //generate presigned url
         const url= await getObjectURL(objectKey,image_type);
         //commit

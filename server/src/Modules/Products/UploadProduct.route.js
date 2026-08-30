@@ -1,8 +1,8 @@
 import express from "express";
-import { createProductUpload } from "./UploadProduct.controller.js";
+import { createProduct} from "./UploadProduct.controller.js";
 
 const UploadRouter=express.Router();
 
-UploadRouter.post('/get-upload-url',createProductUpload);
+UploadRouter.post('/get-upload-url',createProduct);
 
 export default UploadRouter;
