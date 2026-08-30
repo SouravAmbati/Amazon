@@ -1,5 +1,6 @@
 import pool from "../../db/connection.js";
 import { getObjectURL } from "../../storage/uploadURL.js";
+import { v1 as uuidv1 } from 'uuid';
 
 export const createProductUpload=async (req,res)=>{
     const maxSize = 10 * 1024 * 1024;
@@ -22,8 +23,11 @@ export const createProductUpload=async (req,res)=>{
             res.send({success:false,message:"Image Size Is Unacceptable"});
             await client.query('ROLLBACK')
         }
+        //create the object key
+        let uuid=uuidv1();
+        let objectKey=`product/${uuid}/${image_name}`;
         //generate presigned url
-        const url= await getObjectURL(image_name);
+        const url= await getObjectURL(objectKey,image_type);
         //commit
         await client.query('COMMIT')
         res.send({success:true,message:url});
