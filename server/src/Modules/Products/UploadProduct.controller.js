@@ -1,3 +1,4 @@
+import mq from "../../../Queue/MqConnection.js";
 import pool from "../../db/connection.js";
 import { getObjectURL } from "../../storage/uploadURL.js";
 import { v1 as uuidv1 } from 'uuid';
@@ -15,7 +16,7 @@ export const createProduct=async (req,res)=>{
         const colorId=await client.query("INSERT INTO colors(hashcode) VALUES($1) RETURNING id;",[color_code]);
         await client.query("UPDATE product SET color=$1 WHERE id=$2",[colorId.rows[0].id,productId.rows[0].id]);
         //validate the the type,size
-        if(image_type!=="jpeg"){
+        if(image_type!=="jpg"&&image_type!=="jpeg"){
             res.send({success:false,message:"Image Format Is Unacceptable"});
             await client.query('ROLLBACK')
         }
@@ -36,9 +37,31 @@ export const createProduct=async (req,res)=>{
         await client.query('COMMIT')
         res.send({success:true,message:url});
     } catch (error) {
-        await client.query('ROLLBACK')
+        await client.query('ROLLBACK')  
         throw error;
     } finally{
         client.release();
     }
+}
+export const PublishKeyToQueueController=async(req,res)=>{
+    const key=req.body;
+    //check if key provided or not
+    if(!key){
+        res.send({success:false,message:"Please Provife The Object Key"});
+    }
+    //publish the key
+    const channel=await mq.createChannel();
+    const exchange="product_image";
+    const routingKey="image";
+    const queue="product_image_queue";
+    await channel.assertExchange(exchange,"direct",{durable:true});
+    await channel.assertQueue(queue,{durable:true});
+    await channel.bindQueue(queue,exchange,routingKey);
+    const test=channel.publish(exchange,routingKey,Buffer.from(JSON.stringify(key)));
+    if(test){
+        res.send({success:test,message:"successfully published to queue"});
+    }
+    setTimeout(()=>{
+        mq.close();
+    },500);
 }
