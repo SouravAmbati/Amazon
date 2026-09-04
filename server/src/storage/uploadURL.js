@@ -11,13 +11,10 @@ export async function getObjectURL(key,contentType) {
       Key: key,
       ContentType: contentType,
     });
-    const url = await getSignedUrl(b2, command);
+    const url = await getSignedUrl(b2, command,{expiresIn: 300});
     return url;
   } catch (error) {
-    console.log(error);
+    console.error("Failed to generate presigned URL:", error);
+    throw error;
   }
 }
-// async function init() {
-//   console.log("graphql.jpeg: ", await getObjectURL("graphql.jpeg"));
-// }
-// init();

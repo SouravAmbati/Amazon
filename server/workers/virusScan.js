@@ -2,8 +2,10 @@ import { GetObjectCommand} from "@aws-sdk/client-s3";
 import b2 from "../src/storage/S3CONNECTION.js";
 import mq from "../Queue/MqConnection.js";
 import fileTypeChecker from "file-type-checker";
+import pool from "../src/db/connection.js";
 
 const fetchKeyInfoController = async (key) => {
+  const client=await pool.connect();
   console.log((key.key));
       const params = {
       Bucket: process.env.B2_BUCKET_NAME,
@@ -17,6 +19,7 @@ const fetchKeyInfoController = async (key) => {
     if(!response){
       console.log("file is not accepteable");
     }else{
+      await client.query("UPDATE images SET image_status=$1 WHERE storage_key=$2",["READY",key.key]);
       console.log("file verification completed");
     }
   } catch (error) {
@@ -35,6 +38,8 @@ const scanVirus=async()=>{
      console.log("waiting for the message...");
      channel.consume("product_image_queue",async (message)=>{
         if(message!==null){
+            const client=await pool.connect();
+            await client.query("UPDATE images SET image_status=$1 WHERE storage_key=$2",["PROCESSING",JSON.parse(message.content)]);
             await fetchKeyInfoController(JSON.parse(message.content));
             channel.ack(message);
         }

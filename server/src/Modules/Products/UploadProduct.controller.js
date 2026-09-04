@@ -1,32 +1,32 @@
 import mq from "../../../Queue/MqConnection.js";
 import pool from "../../db/connection.js";
 import { getObjectURL } from "../../storage/uploadURL.js";
-import { v1 as uuidv1 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 export const createProduct=async (req,res)=>{
     const maxSize = 10 * 1024 * 1024;
     const client=await pool.connect();
     try {
-        const {product_name,image_name,image_type,image_size,color_code}=req.body;
+        const {product_name,image_type,image_size,color_code}=req.body;
+        if(!product_name||!image_type||!image_size||!color_code){
+            return res.status(400).json({success:false,message: "All Fields Are Required"});
+        }
+         //validate the the type,size
+        if(image_type !== "image/jpeg"){
+            return res.status(400).json({success:false,message: "Only JPEG images are allowed"});
+        }
+        if(image_size>maxSize){
+            return res.status(400).json({success:false,message:"Image size cannot exceed 10 MB"});
+        }
         //begin transaction
-        client.query("BEGIN");
+        await client.query("BEGIN");
         //upload product name to product table
         const productId=await client.query("INSERT INTO product(product_name) VALUES($1) RETURNING id;",[product_name]);
         //upload color to color tablen
         const colorId=await client.query("INSERT INTO colors(hashcode) VALUES($1) RETURNING id;",[color_code]);
         await client.query("UPDATE product SET color=$1 WHERE id=$2",[colorId.rows[0].id,productId.rows[0].id]);
-        //validate the the type,size
-        if(image_type!=="jpg"&&image_type!=="jpeg"){
-            res.send({success:false,message:"Image Format Is Unacceptable"});
-            await client.query('ROLLBACK')
-        }
-        if(image_size>maxSize){
-            res.send({success:false,message:"Image Size Is Unacceptable"});
-            await client.query('ROLLBACK')
-        }
         //create the object key
-        let uuid=uuidv1();
-        let objectKey=`product/${uuid}/${image_name}`;
+        const objectKey = `product/${uuidv4()}/image.jpg`;
         //upload image storage key to image table 
         const imageId=await client.query("INSERT INTO images(storage_key) VALUES($1) RETURNING id;",[objectKey]);
         //update the id of the img in product table
