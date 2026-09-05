@@ -1,0 +1,2 @@
+ALTER TABLE images
+ALTER COLUMN image_url TYPE VARCHAR(255)[];
