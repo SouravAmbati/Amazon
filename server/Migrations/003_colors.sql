@@ -1,0 +1,5 @@
+CREATE TABLE colors(
+    id UUID PRIMARY KEY,
+    hashcode VARCHAR(255)[],
+    created_At  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

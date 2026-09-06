@@ -1,0 +1,5 @@
+CREATE TABLE images(
+    id UUID PRIMARY KEY,
+    image_url VARCHAR(255)[],
+    created_At  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
