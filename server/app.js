@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from 'dotenv';
-import UploadRouter from "./src/Modules/Products/UploadProduct.route.js";
 import connectCloudinary from "./src/config/cloudinarySetup.js";
+import UploadRouter from "./src/Modules/AdminProducts/AdminRoutes/v1/AdminProduct.route.js";
 
 dotenv.config();
 
@@ -11,7 +11,7 @@ app.use(express.json());
 
 connectCloudinary();
 
-app.use('/api/product',UploadRouter);
+app.use('/api/product/v1',UploadRouter);
 
 app.listen(port,()=>{
     console.log(`listening on port ${port}`)
