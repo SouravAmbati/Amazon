@@ -16,7 +16,7 @@ async function getTheFile(){
 async function readTheSchema() {
     getTheFile();
     let path="Migrations/";
-    let fullPath=path+'001_product.sql';
+    let fullPath=path+array.pop();
   fs.readFile(fullPath,"utf8", async (err, data) => {
     if (err) {
       console.error(err);
