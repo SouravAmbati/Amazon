@@ -1,7 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
-import { createProductService } from "./AdminProduct.service.js";
+import { createProductService, getAllTheProducts } from "./AdminProduct.service.js";
 import { createProductSchema } from "./AdminValidators/productValidator.js";
 import { checkFileType } from "../../utils/imageProcessing.js";
+import { cursorSchema } from "./AdminValidators/cursorValidator.js";
 
 export const createProduct = async (req, res) => {
   const uploadedImages = [];
@@ -24,11 +25,6 @@ export const createProduct = async (req, res) => {
         .status(400)
         .json({ success: false, message: error.issues[0].message });
     }
-    console.log("REQ.FILES =", req.files);
-    console.log("image1 =", req.files?.image1);
-    console.log("image2 =", req.files?.image2);
-    console.log("image3 =", req.files?.image3);
-    console.log("image4 =", req.files?.image4);
     const image1 = req.files.image1[0];
     const image2 = req.files.image2[0];
     const image3 = req.files.image3[0];
@@ -72,3 +68,17 @@ export const createProduct = async (req, res) => {
     });
   }
 };
+export const getAllProducts=async(req,res)=>{
+  const { cursor } = req.query;
+   const body = {
+      cursor
+    };
+  const { data, error } = cursorSchema.safeParse(body);
+  if (error) {
+      return res
+        .status(400)
+        .json({ success: false, message: error.issues[0].message });
+    }
+  const response=await getAllTheProducts(data.cursor);
+   res.status(200).json(response);
+}
