@@ -205,3 +205,77 @@ export async function getProducts(cursor) {
     client.release();
   }
 }
+export async function updateProductInDB(product_id,image_id,
+  color_id,product_name,
+  image_urls,colors,category,
+  sizes,about_product,price,idempotencyKey
+){
+  const client=await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const idempotencyResult = await client.query(
+      `
+            INSERT INTO idempotency_keys(key, status)
+            VALUES($1, 'PROCESSING')
+            ON CONFLICT (key) DO NOTHING
+            RETURNING key
+            `,
+      [idempotencyKey],
+    );
+
+    if (idempotencyResult.rowCount === 0) {
+      const existingResult = await client.query(
+        `
+                SELECT status, response
+                FROM idempotency_keys
+                WHERE key = $1
+                FOR UPDATE
+                `,
+        [idempotencyKey],
+      );
+
+      const existing = existingResult.rows[0];
+
+      if (existing.status === "PROCESSING") {
+        await client.query("ROLLBACK");
+        throw new Error("This request is already being processed");
+      }
+
+      if (existing.status === "COMPLETED") {
+        await client.query("COMMIT");
+
+        return existing.response;
+      }
+    }
+    await client.query(`
+    UPDATE product
+    SET product_name=$1,
+    category=$2,
+    sizes=$3,
+    about_product=$4,
+    price=$5
+    WHERE id=$6
+    `,[product_name,category,sizes,about_product,price,product_id]);
+  await client.query(`
+    UPDATE images
+    SET image_url=$1
+    WHERE id=$2
+    `,[image_urls,image_id]);
+  await client.query(`
+    UPDATE colors
+    SET hashcode=$1
+    WHERE id=$2
+    `,[colors,color_id]);
+  await client.query("COMMIT");
+   const response = {
+      success: true,
+      message: "Product updated successfully",
+  };
+    return response
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw new Error("Database failed");
+  }finally{
+    client.release();
+  }
+}
