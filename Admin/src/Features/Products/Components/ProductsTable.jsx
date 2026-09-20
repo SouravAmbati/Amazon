@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+import React, {
+    useContext,
+    useEffect,
+    useState
+} from "react";
 
 import {
     Eye,
@@ -8,188 +12,80 @@ import {
 
 import ProductDetail from "./ProductDetail";
 
+import {
+    ProductContext
+} from "../../../context/ProductContext";
+
 
 const ProductsTable = () => {
 
 
-    /* ================= PRODUCT DATA ================= */
+    /* =====================================================
+       PRODUCT CONTEXT
+    ===================================================== */
+
+    const {
+        products,
+        loading,
+        currentPage,
+        pageCursors,
+        hasNextPage,
+        GetProducts,
+        ChangePage,
+        NextPage,
+        PreviousPage
+    } = useContext(ProductContext);
 
 
-    const [products, setProducts] = useState([
+    /* =====================================================
+       STATE
+    ===================================================== */
 
-        {
-            id: 1,
-
-            name: "Apple iPhone 15 Pro Max",
-
-            category: "Electronics",
-
-            price: 159900,
-
-            description:
-                "The Apple iPhone 15 Pro Max features a premium titanium design, powerful performance and an advanced camera system. Designed for users who want high performance, premium build quality and professional-level photography capabilities.",
-
-            images: [
-                "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800",
-                "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800",
-                "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800",
-                "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800"
-            ],
-
-            colors: [
-                "#1f2937",
-                "#d1d5db",
-                "#2563eb",
-                "#f5f5dc"
-            ],
-
-            sizes: [
-                "128 GB",
-                "256 GB",
-                "512 GB",
-                "1 TB"
-            ]
-        },
+    const [
+        selectedProducts,
+        setSelectedProducts
+    ] = useState([]);
 
 
-        {
-            id: 2,
-
-            name: "Sony WH-1000XM5 Wireless Headphones",
-
-            category: "Electronics",
-
-            price: 29990,
-
-            description:
-                "Premium wireless noise cancelling headphones with immersive sound quality, comfortable design and long battery life.",
-
-            images: [
-                "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
-                "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800",
-                "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800",
-                "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800"
-            ],
-
-            colors: [
-                "#000000",
-                "#d1d5db",
-                "#1e3a5f"
-            ],
-
-            sizes: [
-                "Standard"
-            ]
-        },
+    const [
+        selectedProduct,
+        setSelectedProduct
+    ] = useState(null);
 
 
-        {
-            id: 3,
+    /* =====================================================
+       FETCH FIRST PAGE
+    ===================================================== */
 
-            name: "Apple MacBook Air M3",
+    useEffect(() => {
 
-            category: "Electronics",
+        GetProducts(1);
 
-            price: 114900,
-
-            description:
-                "Apple MacBook Air powered by the M3 chip delivers fast performance, excellent battery life and a lightweight premium design.",
-
-            images: [
-                "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800",
-                "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800",
-                "https://images.unsplash.com/photo-1511385348-a52b4a160dc2?w=800",
-                "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800"
-            ],
-
-            colors: [
-                "#1f2937",
-                "#d1d5db",
-                "#e5e7eb"
-            ],
-
-            sizes: [
-                "256 GB",
-                "512 GB",
-                "1 TB"
-            ]
-        },
+    }, []);
 
 
-        {
-            id: 4,
-
-            name: "Apple Watch Series 9",
-
-            category: "Wearables",
-
-            price: 41900,
-
-            description:
-                "Apple Watch Series 9 provides advanced health tracking, fitness features and seamless integration with Apple devices.",
-
-            images: [
-                "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=800",
-                "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=800",
-                "https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=800",
-                "https://images.unsplash.com/photo-1544117519-31a4b719223d?w=800"
-            ],
-
-            colors: [
-                "#000000",
-                "#ef4444",
-                "#d1d5db"
-            ],
-
-            sizes: [
-                "41mm",
-                "45mm"
-            ]
-        }
-
-    ]);
-
-
-
-    /* ================= STATE ================= */
-
-
-    // PRODUCTS SELECTED USING CHECKBOX
-
-    const [selectedProducts, setSelectedProducts] = useState([]);
-
-
-    // PRODUCT SELECTED FOR DETAIL POPUP
-
-    const [selectedProduct, setSelectedProduct] = useState(null);
-
-
-
-    /* ================= SELECT PRODUCT ================= */
-
+    /* =====================================================
+       SELECT PRODUCT
+    ===================================================== */
 
     const handleSelectProduct = (id) => {
 
-        if (selectedProducts.includes(id)) {
+        if (
+            selectedProducts.includes(id)
+        ) {
 
             setSelectedProducts(
-
                 selectedProducts.filter(
-
-                    productId => productId !== id
-
+                    productId =>
+                        productId !== id
                 )
-
             );
 
         } else {
 
             setSelectedProducts([
-
                 ...selectedProducts,
-
                 id
-
             ]);
 
         }
@@ -197,16 +93,16 @@ const ProductsTable = () => {
     };
 
 
-
-    /* ================= SELECT ALL ================= */
-
+    /* =====================================================
+       SELECT ALL
+    ===================================================== */
 
     const handleSelectAll = () => {
 
         if (
-
-            selectedProducts.length === products.length
-
+            products.length > 0 &&
+            selectedProducts.length ===
+            products.length
         ) {
 
             setSelectedProducts([]);
@@ -214,13 +110,9 @@ const ProductsTable = () => {
         } else {
 
             setSelectedProducts(
-
                 products.map(
-
                     product => product.id
-
                 )
-
             );
 
         }
@@ -228,65 +120,96 @@ const ProductsTable = () => {
     };
 
 
-
-    /* ================= DELETE SELECTED ================= */
-
+    /* =====================================================
+       DELETE SELECTED
+    ===================================================== */
 
     const handleDeleteSelected = () => {
 
-        setProducts(
-
-            products.filter(
-
-                product =>
-
-                    !selectedProducts.includes(
-
-                        product.id
-
-                    )
-
-            )
-
+        console.log(
+            "Selected products:",
+            selectedProducts
         );
 
+        /*
+         * Add your DELETE API here later.
+         */
 
         setSelectedProducts([]);
 
     };
 
 
-
-    /* ================= EDIT PRODUCT ================= */
-
+    /* =====================================================
+       EDIT PRODUCT
+    ===================================================== */
 
     const handleEditProduct = (product) => {
 
         console.log(
-
             "Edit Product:",
-
             product
-
         );
-
 
         setSelectedProduct(null);
 
     };
 
 
+    /* =====================================================
+       PAGE BUTTON
+    ===================================================== */
 
-    /* ================= UI ================= */
+    const handlePageChange = async (page) => {
 
+        if (loading) {
+            return;
+        }
+
+        await ChangePage(page);
+
+    };
+
+
+    /* =====================================================
+       CHECK IF PAGE IS AVAILABLE
+    ===================================================== */
+
+    const isPageAvailable = (page) => {
+
+        /*
+         * Page 1 is always available.
+         */
+
+        if (page === 1) {
+            return true;
+        }
+
+
+        /*
+         * A page is available if we already
+         * have the cursor required to fetch it.
+         */
+
+        return Boolean(
+            pageCursors?.[page]
+        );
+
+    };
+
+
+    /* =====================================================
+       UI
+    ===================================================== */
 
     return (
 
         <div className="p-8">
 
 
-            {/* ================= PAGE TITLE ================= */}
-
+            {/* =====================================================
+                PAGE TITLE
+            ===================================================== */}
 
             <div className="mb-6">
 
@@ -318,9 +241,9 @@ const ProductsTable = () => {
             </div>
 
 
-
-            {/* ================= SELECTED PRODUCT ACTION ================= */}
-
+            {/* =====================================================
+                SELECTED PRODUCT ACTION
+            ===================================================== */}
 
             {selectedProducts.length > 0 && (
 
@@ -338,7 +261,6 @@ const ProductsTable = () => {
                         rounded-lg
                     "
                 >
-
 
                     <div
                         className="
@@ -368,21 +290,24 @@ const ProductsTable = () => {
 
                             product
 
-                            {selectedProducts.length > 1 && "s"}
+                            {
+                                selectedProducts.length > 1
+                                    ? "s"
+                                    : ""
+                            }
 
-                            {" "}
-
-                            selected
+                            {" selected"}
 
                         </span>
 
                     </div>
 
 
-
                     <button
                         type="button"
-                        onClick={handleDeleteSelected}
+                        onClick={
+                            handleDeleteSelected
+                        }
                         className="
                             flex
                             items-center
@@ -402,20 +327,18 @@ const ProductsTable = () => {
 
                         <Trash2 size={16} />
 
-
                         Delete Selected
 
                     </button>
-
 
                 </div>
 
             )}
 
 
-
-            {/* ================= PRODUCTS TABLE ================= */}
-
+            {/* =====================================================
+                PRODUCTS TABLE
+            ===================================================== */}
 
             <div
                 className="
@@ -428,15 +351,14 @@ const ProductsTable = () => {
                 "
             >
 
-
                 <div className="overflow-x-auto">
-
 
                     <table className="w-full">
 
 
-                        {/* ================= TABLE HEAD ================= */}
-
+                        {/* =====================================================
+                            TABLE HEAD
+                        ===================================================== */}
 
                         <thead
                             className="
@@ -446,12 +368,10 @@ const ProductsTable = () => {
                             "
                         >
 
-
                             <tr>
 
 
                                 {/* CHECKBOX */}
-
 
                                 <th
                                     className="
@@ -468,23 +388,19 @@ const ProductsTable = () => {
                                             checkbox-sm
                                         "
                                         checked={
-
                                             products.length > 0 &&
-
                                             selectedProducts.length ===
-
                                             products.length
-
                                         }
-                                        onChange={handleSelectAll}
+                                        onChange={
+                                            handleSelectAll
+                                        }
                                     />
 
                                 </th>
 
 
-
                                 {/* IMAGE */}
-
 
                                 <th
                                     className="
@@ -504,9 +420,7 @@ const ProductsTable = () => {
                                 </th>
 
 
-
                                 {/* PRODUCT NAME */}
-
 
                                 <th
                                     className="
@@ -526,9 +440,7 @@ const ProductsTable = () => {
                                 </th>
 
 
-
                                 {/* ACTIONS */}
-
 
                                 <th
                                     className="
@@ -550,13 +462,12 @@ const ProductsTable = () => {
 
                             </tr>
 
-
                         </thead>
 
 
-
-                        {/* ================= TABLE BODY ================= */}
-
+                        {/* =====================================================
+                            TABLE BODY
+                        ===================================================== */}
 
                         <tbody
                             className="
@@ -566,322 +477,689 @@ const ProductsTable = () => {
                         >
 
 
-                            {products.map((product) => (
+                            {products.map(
+                                (product) => (
 
+                                    <tr
+                                        key={product.id}
+                                        className={`
+                                            transition
 
-                                <tr
-                                    key={product.id}
-                                    className={`
-                                        transition
-
-                                        ${
-
-                                            selectedProducts.includes(
-
-                                                product.id
-
-                                            )
-
-                                                ? "bg-red-50"
-
-                                                : "hover:bg-gray-50"
-
-                                        }
-                                    `}
-                                >
-
-
-                                    {/* ================= CHECKBOX ================= */}
-
-
-                                    <td
-                                        className="
-                                            px-6
-                                            py-4
-                                        "
-                                    >
-
-                                        <input
-                                            type="checkbox"
-                                            className="
-                                                checkbox
-                                                checkbox-sm
-                                            "
-                                            checked={
-
+                                            ${
                                                 selectedProducts.includes(
-
                                                     product.id
-
                                                 )
-
+                                                    ? "bg-red-50"
+                                                    : "hover:bg-gray-50"
                                             }
-                                            onChange={() =>
-
-                                                handleSelectProduct(
-
-                                                    product.id
-
-                                                )
-
-                                            }
-                                        />
-
-                                    </td>
-
-
-
-                                    {/* ================= PRODUCT IMAGE ================= */}
-
-
-                                    <td
-                                        className="
-                                            px-6
-                                            py-4
-                                        "
+                                        `}
                                     >
 
 
-                                        <div
+                                        {/* =====================================================
+                                            CHECKBOX
+                                        ===================================================== */}
+
+                                        <td
                                             className="
-                                                w-16
-                                                h-16
-                                                border
-                                                border-gray-200
-                                                rounded-lg
-                                                overflow-hidden
-                                                bg-gray-50
+                                                px-6
+                                                py-4
                                             "
                                         >
 
-
-                                            <img
-                                                src={product.images[0]}
-                                                alt={product.name}
+                                            <input
+                                                type="checkbox"
                                                 className="
-                                                    w-full
-                                                    h-full
-                                                    object-contain
+                                                    checkbox
+                                                    checkbox-sm
                                                 "
+                                                checked={
+                                                    selectedProducts.includes(
+                                                        product.id
+                                                    )
+                                                }
+                                                onChange={() =>
+                                                    handleSelectProduct(
+                                                        product.id
+                                                    )
+                                                }
                                             />
 
-
-                                        </div>
-
-
-                                    </td>
+                                        </td>
 
 
+                                        {/* =====================================================
+                                            PRODUCT IMAGE
+                                        ===================================================== */}
 
-                                    {/* ================= PRODUCT NAME ================= */}
-
-
-                                    <td
-                                        className="
-                                            px-6
-                                            py-4
-                                        "
-                                    >
-
-
-                                        <p
+                                        <td
                                             className="
+                                                px-6
+                                                py-4
+                                            "
+                                        >
+
+                                            <div
+                                                className="
+                                                    w-16
+                                                    h-16
+                                                    border
+                                                    border-gray-200
+                                                    rounded-lg
+                                                    overflow-hidden
+                                                    bg-gray-50
+                                                "
+                                            >
+
+                                                {
+                                                    product.images?.[0]
+                                                        ? (
+
+                                                            <img
+                                                                src={
+                                                                    product.images[0]
+                                                                }
+                                                                alt={
+                                                                    product.name
+                                                                }
+                                                                className="
+                                                                    w-full
+                                                                    h-full
+                                                                    object-contain
+                                                                "
+                                                            />
+
+                                                        )
+                                                        : (
+
+                                                            <div
+                                                                className="
+                                                                    w-full
+                                                                    h-full
+                                                                    flex
+                                                                    items-center
+                                                                    justify-center
+                                                                    text-xs
+                                                                    text-gray-400
+                                                                "
+                                                            >
+
+                                                                No Image
+
+                                                            </div>
+
+                                                        )
+                                                }
+
+                                            </div>
+
+                                        </td>
+
+
+                                        {/* =====================================================
+                                            PRODUCT NAME
+                                        ===================================================== */}
+
+                                        <td
+                                            className="
+                                                px-6
+                                                py-4
+                                            "
+                                        >
+
+                                            <p
+                                                className="
+                                                    text-sm
+                                                    font-semibold
+                                                    text-gray-900
+                                                "
+                                            >
+
+                                                {
+                                                    product.name
+                                                }
+
+                                            </p>
+
+
+                                            <p
+                                                className="
+                                                    text-xs
+                                                    text-gray-500
+                                                    mt-1
+                                                "
+                                            >
+
+                                                {
+                                                    product.category
+                                                }
+
+                                            </p>
+
+                                        </td>
+
+
+                                        {/* =====================================================
+                                            ACTIONS
+                                        ===================================================== */}
+
+                                        <td
+                                            className="
+                                                px-6
+                                                py-4
+                                            "
+                                        >
+
+                                            <div
+                                                className="
+                                                    flex
+                                                    items-center
+                                                    justify-end
+                                                    gap-2
+                                                "
+                                            >
+
+
+                                                {/* VIEW */}
+
+                                                <button
+                                                    type="button"
+                                                    title="View Product"
+                                                    onClick={() =>
+                                                        setSelectedProduct(
+                                                            product
+                                                        )
+                                                    }
+                                                    className="
+                                                        p-2
+                                                        text-gray-500
+                                                        rounded-lg
+                                                        hover:bg-gray-100
+                                                        hover:text-gray-900
+                                                        transition
+                                                        cursor-pointer
+                                                    "
+                                                >
+
+                                                    <Eye
+                                                        size={19}
+                                                    />
+
+                                                </button>
+
+
+                                                {/* EDIT */}
+
+                                                <button
+                                                    type="button"
+                                                    title="Edit Product"
+                                                    onClick={() =>
+                                                        handleEditProduct(
+                                                            product
+                                                        )
+                                                    }
+                                                    className="
+                                                        p-2
+                                                        text-gray-500
+                                                        rounded-lg
+                                                        hover:bg-gray-100
+                                                        hover:text-gray-900
+                                                        transition
+                                                        cursor-pointer
+                                                    "
+                                                >
+
+                                                    <Pencil
+                                                        size={18}
+                                                    />
+
+                                                </button>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                )
+                            )}
+
+
+                            {/* =====================================================
+                                INITIAL LOADING
+                            ===================================================== */}
+
+                            {
+                                loading &&
+                                products.length === 0 && (
+
+                                    <tr>
+
+                                        <td
+                                            colSpan="4"
+                                            className="
+                                                px-6
+                                                py-12
+                                                text-center
                                                 text-sm
-                                                font-semibold
-                                                text-gray-900
-                                            "
-                                        >
-
-                                            {product.name}
-
-                                        </p>
-
-
-                                        <p
-                                            className="
-                                                text-xs
                                                 text-gray-500
-                                                mt-1
                                             "
                                         >
 
-                                            {product.category}
+                                            Loading products...
 
-                                        </p>
+                                        </td>
 
+                                    </tr>
 
-                                    </td>
-
-
-
-                                    {/* ================= ACTIONS ================= */}
-
-
-                                    <td
-                                        className="
-                                            px-6
-                                            py-4
-                                        "
-                                    >
-
-
-                                        <div
-                                            className="
-                                                flex
-                                                items-center
-                                                justify-end
-                                                gap-2
-                                            "
-                                        >
-
-
-                                            {/* VIEW PRODUCT */}
-
-
-                                            <button
-                                                type="button"
-                                                title="View Product"
-                                                onClick={() =>
-
-                                                    setSelectedProduct(
-
-                                                        product
-
-                                                    )
-
-                                                }
-                                                className="
-                                                    p-2
-                                                    text-gray-500
-                                                    rounded-lg
-                                                    hover:bg-gray-100
-                                                    hover:text-gray-900
-                                                    transition
-                                                    cursor-pointer
-                                                "
-                                            >
-
-
-                                                <Eye size={19} />
-
-
-                                            </button>
-
-
-
-                                            {/* EDIT PRODUCT */}
-
-
-                                            <button
-                                                type="button"
-                                                title="Edit Product"
-                                                onClick={() =>
-
-                                                    handleEditProduct(
-
-                                                        product
-
-                                                    )
-
-                                                }
-                                                className="
-                                                    p-2
-                                                    text-gray-500
-                                                    rounded-lg
-                                                    hover:bg-gray-100
-                                                    hover:text-gray-900
-                                                    transition
-                                                    cursor-pointer
-                                                "
-                                            >
-
-
-                                                <Pencil size={18} />
-
-
-                                            </button>
-
-
-                                        </div>
-
-
-                                    </td>
-
-
-                                </tr>
-
-
-                            ))}
+                                )
+                            }
 
 
                         </tbody>
 
-
                     </table>
 
-
                 </div>
-
 
             </div>
 
 
+            {/* =====================================================
+                PAGINATION
+            ===================================================== */}
 
-            {/* ================= EMPTY PRODUCT MESSAGE ================= */}
+            {
+                products.length > 0 && (
 
-
-            {products.length === 0 && (
-
-                <div
-                    className="
-                        text-center
-                        py-16
-                    "
-                >
-
-                    <p
+                    <div
                         className="
-                            text-gray-500
-                            text-sm
+                            flex
+                            items-center
+                            justify-center
+                            gap-2
+                            mt-6
                         "
                     >
 
-                        No products available
 
-                    </p>
+                        {/* =====================================================
+                            PREVIOUS
+                        ===================================================== */}
 
-                </div>
+                        <button
+                            type="button"
+                            onClick={
+                                PreviousPage
+                            }
+                            disabled={
+                                currentPage === 1 ||
+                                loading
+                            }
+                            className="
+                                px-3
+                                py-2
+                                border
+                                border-gray-300
+                                rounded-lg
+                                text-sm
+                                text-gray-600
+                                hover:bg-gray-100
+                                disabled:opacity-40
+                                disabled:cursor-not-allowed
+                                transition
+                                cursor-pointer
+                            "
+                        >
 
-            )}
+                            Previous
+
+                        </button>
 
 
+                        {/* =====================================================
+                            PAGE 1
+                        ===================================================== */}
 
-            {/* ================= PRODUCT DETAIL POPUP ================= */}
+                        <button
+                            type="button"
+                            onClick={() =>
+                                handlePageChange(1)
+                            }
+                            disabled={loading}
+                            className={`
+                                w-9
+                                h-9
+                                rounded-lg
+                                text-sm
+                                font-medium
+                                transition
+                                cursor-pointer
+
+                                ${
+                                    currentPage === 1
+                                        ? "bg-gray-900 text-white"
+                                        : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                                }
+                            `}
+                        >
+
+                            1
+
+                        </button>
 
 
-            {selectedProduct && (
+                        {/* =====================================================
+                            PAGE 2
+                        ===================================================== */}
 
-                <ProductDetail
+                        {
+                            isPageAvailable(2) && (
 
-                    product={selectedProduct}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(2)
+                                    }
+                                    disabled={
+                                        loading
+                                    }
+                                    className={`
+                                        w-9
+                                        h-9
+                                        rounded-lg
+                                        text-sm
+                                        font-medium
+                                        transition
+                                        cursor-pointer
+
+                                        ${
+                                            currentPage === 2
+                                                ? "bg-gray-900 text-white"
+                                                : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                                        }
+                                    `}
+                                >
+
+                                    2
+
+                                </button>
+
+                            )
+                        }
 
 
-                    onClose={() =>
+                        {/* =====================================================
+                            PAGE 3
+                        ===================================================== */}
 
-                        setSelectedProduct(null)
+                        {
+                            isPageAvailable(3) && (
 
-                    }
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(3)
+                                    }
+                                    disabled={
+                                        loading
+                                    }
+                                    className={`
+                                        w-9
+                                        h-9
+                                        rounded-lg
+                                        text-sm
+                                        font-medium
+                                        transition
+                                        cursor-pointer
+
+                                        ${
+                                            currentPage === 3
+                                                ? "bg-gray-900 text-white"
+                                                : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                                        }
+                                    `}
+                                >
+
+                                    3
+
+                                </button>
+
+                            )
+                        }
 
 
-                    onEdit={(product) =>
+                        {/* =====================================================
+                            PAGE 4
+                        ===================================================== */}
 
-                        handleEditProduct(product)
+                        {
+                            isPageAvailable(4) && (
 
-                    }
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(4)
+                                    }
+                                    disabled={
+                                        loading
+                                    }
+                                    className={`
+                                        w-9
+                                        h-9
+                                        rounded-lg
+                                        text-sm
+                                        font-medium
+                                        transition
+                                        cursor-pointer
 
-                />
+                                        ${
+                                            currentPage === 4
+                                                ? "bg-gray-900 text-white"
+                                                : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                                        }
+                                    `}
+                                >
 
-            )}
+                                    4
+
+                                </button>
+
+                            )
+                        }
+
+
+                        {/* =====================================================
+                            PAGE 5
+                        ===================================================== */}
+
+                        {
+                            isPageAvailable(5) && (
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(5)
+                                    }
+                                    disabled={
+                                        loading
+                                    }
+                                    className={`
+                                        w-9
+                                        h-9
+                                        rounded-lg
+                                        text-sm
+                                        font-medium
+                                        transition
+                                        cursor-pointer
+
+                                        ${
+                                            currentPage === 5
+                                                ? "bg-gray-900 text-white"
+                                                : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                                        }
+                                    `}
+                                >
+
+                                    5
+
+                                </button>
+
+                            )
+                        }
+
+
+                        {/* =====================================================
+                            NEXT
+                        ===================================================== */}
+
+                        <button
+                            type="button"
+                            onClick={
+                                NextPage
+                            }
+                            disabled={
+                                !hasNextPage ||
+                                loading
+                            }
+                            className="
+                                px-3
+                                py-2
+                                border
+                                border-gray-300
+                                rounded-lg
+                                text-sm
+                                text-gray-600
+                                hover:bg-gray-100
+                                disabled:opacity-40
+                                disabled:cursor-not-allowed
+                                transition
+                                cursor-pointer
+                            "
+                        >
+
+                            Next
+
+                        </button>
+
+
+                    </div>
+
+                )
+            }
+
+
+            {/* =====================================================
+                LOADING NEXT PAGE
+            ===================================================== */}
+
+            {
+                loading &&
+                products.length > 0 && (
+
+                    <div
+                        className="
+                            text-center
+                            mt-4
+                            text-sm
+                            text-gray-500
+                        "
+                    >
+
+                        Loading products...
+
+                    </div>
+
+                )
+            }
+
+
+            {/* =====================================================
+                ALL PRODUCTS LOADED
+            ===================================================== */}
+
+            {
+                products.length > 0 &&
+                !hasNextPage && (
+
+                    <div
+                        className="
+                            text-center
+                            mt-4
+                            text-sm
+                            text-gray-400
+                        "
+                    >
+
+                        No more products
+
+                    </div>
+
+                )
+            }
+
+
+            {/* =====================================================
+                EMPTY
+            ===================================================== */}
+
+            {
+                !loading &&
+                products.length === 0 && (
+
+                    <div
+                        className="
+                            text-center
+                            py-16
+                        "
+                    >
+
+                        <p
+                            className="
+                                text-gray-500
+                                text-sm
+                            "
+                        >
+
+                            No products available
+
+                        </p>
+
+                    </div>
+
+                )
+            }
+
+
+            {/* =====================================================
+                PRODUCT DETAIL
+            ===================================================== */}
+
+            {
+                selectedProduct && (
+
+                    <ProductDetail
+
+                        product={
+                            selectedProduct
+                        }
+
+                        onClose={() =>
+                            setSelectedProduct(
+                                null
+                            )
+                        }
+
+                        onEdit={(product) =>
+                            handleEditProduct(
+                                product
+                            )
+                        }
+
+                    />
+
+                )
+            }
 
 
         </div>

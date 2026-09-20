@@ -4,5 +4,5 @@ export const cursorSchema = z.object({
     .string()
     .trim()
     .max(36, "Cursor cannot be longer than 36 characters")
-    .uuid("Cursor must be a valid UUID"),
+    .optional()
 });
