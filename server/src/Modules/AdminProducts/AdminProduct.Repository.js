@@ -148,7 +148,7 @@ export async function getProducts(cursor) {
     INNER JOIN images i
         ON p.img = i.id
     ORDER BY p.id ASC
-    LIMIT 4
+    LIMIT 5
 `,);
  const nextCursor =
     result.rows.length > 0
