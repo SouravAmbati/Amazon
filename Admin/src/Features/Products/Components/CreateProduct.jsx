@@ -1,12 +1,17 @@
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import {
     ImagePlus,
     X,
     Plus,
     PackagePlus
 } from "lucide-react";
+import { ProductContext } from "../../../context/ProductContext";
+import { toast } from 'react-toastify';
+import { generateIdempotencyKey } from "../Data/generateIdempotencyKey.js";
+
 
 const CreateProduct = () => {
+    const idempotencyKey = generateIdempotencyKey();
     const [product, setProduct] = useState({
         name: "",
         category: "",
@@ -15,6 +20,7 @@ const CreateProduct = () => {
         colors: [],
         sizes: []
     });
+    const { CreateProduct } = useContext(ProductContext);
 
     const [images, setImages] = useState([]);
     const [selectedColor, setSelectedColor] = useState("#000000");
@@ -135,7 +141,7 @@ const CreateProduct = () => {
     };
 
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const productData = {
@@ -143,7 +149,16 @@ const CreateProduct = () => {
             images: images.map((image) => image.file)
         };
 
+        console.log("SUBMIT FIRED");
         console.log(productData);
+
+        const res = await CreateProduct(productData,idempotencyKey);
+
+        if (res) {
+            toast.success(res);
+        } else {
+            toast.error("Failed to create product");
+        }
     };
 
 
@@ -721,10 +736,9 @@ const CreateProduct = () => {
                                                     font-medium
                                                     transition
 
-                                                    ${
-                                                        selected
-                                                            ? "bg-gray-900 border-gray-900 text-white"
-                                                            : "bg-white border-gray-300 text-gray-600 hover:border-gray-600"
+                                                    ${selected
+                                                        ? "bg-gray-900 border-gray-900 text-white"
+                                                        : "bg-white border-gray-300 text-gray-600 hover:border-gray-600"
                                                     }
                                                 `}
                                             >

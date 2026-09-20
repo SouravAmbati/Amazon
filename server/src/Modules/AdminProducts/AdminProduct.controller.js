@@ -13,7 +13,7 @@ export const createProduct = async (req, res) => {
       sizes: JSON.parse(req.body.sizes),
     };
     const { data, error } = createProductSchema.safeParse(body);
-    const idempotencyKey = req.get("Idempotency-Key");
+    const idempotencyKey = req.get("IdempotencyKey");
     if (!idempotencyKey) {
       return res.status(400).json({
         success: false,
