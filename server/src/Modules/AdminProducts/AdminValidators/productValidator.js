@@ -12,11 +12,11 @@ export const updateProductSchema = z
     product_name: z.string().trim().min(2),
 
     colors: z.array(
-      z.string().trim().max(7).startsWith("#")
+      z.string().trim().startsWith("#")
     ),
 
     sizes: z.array(
-      z.string().trim().max(5)
+      z.string().trim().min(1)
     ),
 
     about_product: z.string(),

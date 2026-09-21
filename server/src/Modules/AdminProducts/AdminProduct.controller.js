@@ -89,14 +89,14 @@ export const updateProduct=async(req,res)=>{
     const product_id = req.get("product_id");
     const image_id = req.get("image_id");
     const color_id = req.get("color_id");
-    const idempotencyKey = req.get("Idempotency-Key");
+    const idempotencyKey = req.get("IdempotencyKey");
     //get all the data and validate it through the validator;
      const body = {
       ...req.body,
       colors: JSON.parse(req.body.colors),
       sizes: JSON.parse(req.body.sizes),
     };
-    console.log(body);
+    console.log(body,image_id);
     const { data, error } = updateProductSchema.safeParse(body);
     if (!idempotencyKey) {
       return res.status(400).json({

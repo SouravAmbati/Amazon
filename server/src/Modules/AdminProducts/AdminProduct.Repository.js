@@ -141,7 +141,9 @@ export async function getProducts(cursor) {
         p.price,
         p.created_at,
         c.hashcode AS colors,
-        i.image_url AS images
+        c.id AS color_id,
+        i.image_url AS images,
+        p.img AS image_id
     FROM product p
     INNER JOIN colors c
         ON p.color = c.id
@@ -175,7 +177,9 @@ export async function getProducts(cursor) {
         p.price,
         p.created_at,
         c.hashcode AS colors,
-        i.image_url AS images
+        c.id AS color_id,
+        i.image_url AS images,
+        p.img AS image_id
     FROM product p
     INNER JOIN colors c
         ON p.color = c.id
@@ -215,22 +219,22 @@ export async function updateProductInDB(product_id,image_id,
     await client.query("BEGIN");
     const idempotencyResult = await client.query(
       `
-            INSERT INTO idempotency_keys(key, status)
-            VALUES($1, 'PROCESSING')
-            ON CONFLICT (key) DO NOTHING
-            RETURNING key
-            `,
+      INSERT INTO idempotency_keys(key, status)
+      VALUES($1, 'PROCESSING')
+      ON CONFLICT (key) DO NOTHING
+      RETURNING key
+      `,
       [idempotencyKey],
     );
 
     if (idempotencyResult.rowCount === 0) {
       const existingResult = await client.query(
         `
-                SELECT status, response
-                FROM idempotency_keys
-                WHERE key = $1
-                FOR UPDATE
-                `,
+        SELECT status, response
+        FROM idempotency_keys
+        WHERE key = $1
+        FOR UPDATE
+        `,
         [idempotencyKey],
       );
 
@@ -248,7 +252,7 @@ export async function updateProductInDB(product_id,image_id,
       }
     }
     await client.query(`
-    UPDATE product
+      UPDATE product
     SET product_name=$1,
     category=$2,
     sizes=$3,
@@ -257,20 +261,20 @@ export async function updateProductInDB(product_id,image_id,
     WHERE id=$6
     `,[product_name,category,sizes,about_product,price,product_id]);
   await client.query(`
-    UPDATE images
+        UPDATE images
     SET image_url=$1
     WHERE id=$2
     `,[image_urls,image_id]);
   await client.query(`
-    UPDATE colors
+      UPDATE colors
     SET hashcode=$1
     WHERE id=$2
     `,[colors,color_id]);
   await client.query("COMMIT");
-   const response = {
+    const response = {
       success: true,
       message: "Product updated successfully",
-  };
+    };
     return response
   } catch (error) {
     await client.query("ROLLBACK");
