@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import ProductDetail from "./ProductDetail";
+import ProductEdit from "./ProductEdit";
 
 import {
     ProductContext
@@ -47,9 +48,17 @@ const ProductsTable = () => {
     ] = useState([]);
 
 
+    // Product currently opened in ProductDetail
     const [
         selectedProduct,
         setSelectedProduct
+    ] = useState(null);
+
+
+    // Product currently being edited
+    const [
+        editingProduct,
+        setEditingProduct
     ] = useState(null);
 
 
@@ -141,22 +150,6 @@ const ProductsTable = () => {
 
 
     /* =====================================================
-       EDIT PRODUCT
-    ===================================================== */
-
-    const handleEditProduct = (product) => {
-
-        console.log(
-            "Edit Product:",
-            product
-        );
-
-        setSelectedProduct(null);
-
-    };
-
-
-    /* =====================================================
        PAGE BUTTON
     ===================================================== */
 
@@ -194,6 +187,44 @@ const ProductsTable = () => {
         return Boolean(
             pageCursors?.[page]
         );
+
+    };
+
+
+    /* =====================================================
+       EDIT PRODUCT
+    ===================================================== */
+
+    const handleEditProduct = (product) => {
+
+        // Put the selected product into edit state
+        setEditingProduct(product);
+
+    };
+
+
+    /* =====================================================
+       CLOSE EDITOR
+    ===================================================== */
+
+    const handleCloseEditor = () => {
+
+        setEditingProduct(null);
+
+    };
+
+
+    /* =====================================================
+       EDIT SUCCESS
+    ===================================================== */
+
+    const handleEditSuccess = () => {
+
+        // Close edit modal
+        setEditingProduct(null);
+
+        // Close product detail modal
+        setSelectedProduct(null);
 
     };
 
@@ -455,7 +486,7 @@ const ProductsTable = () => {
                                     "
                                 >
 
-                                    Actions
+                                    VIEW
 
                                 </th>
 
@@ -687,34 +718,6 @@ const ProductsTable = () => {
 
                                                 </button>
 
-
-                                                {/* EDIT */}
-
-                                                <button
-                                                    type="button"
-                                                    title="Edit Product"
-                                                    onClick={() =>
-                                                        handleEditProduct(
-                                                            product
-                                                        )
-                                                    }
-                                                    className="
-                                                        p-2
-                                                        text-gray-500
-                                                        rounded-lg
-                                                        hover:bg-gray-100
-                                                        hover:text-gray-900
-                                                        transition
-                                                        cursor-pointer
-                                                    "
-                                                >
-
-                                                    <Pencil
-                                                        size={18}
-                                                    />
-
-                                                </button>
-
                                             </div>
 
                                         </td>
@@ -817,9 +820,7 @@ const ProductsTable = () => {
                         </button>
 
 
-                        {/* =====================================================
-                            PAGE 1
-                        ===================================================== */}
+                        {/* PAGE 1 */}
 
                         <button
                             type="button"
@@ -849,9 +850,7 @@ const ProductsTable = () => {
                         </button>
 
 
-                        {/* =====================================================
-                            PAGE 2
-                        ===================================================== */}
+                        {/* PAGE 2 */}
 
                         {
                             isPageAvailable(2) && (
@@ -889,9 +888,7 @@ const ProductsTable = () => {
                         }
 
 
-                        {/* =====================================================
-                            PAGE 3
-                        ===================================================== */}
+                        {/* PAGE 3 */}
 
                         {
                             isPageAvailable(3) && (
@@ -929,9 +926,7 @@ const ProductsTable = () => {
                         }
 
 
-                        {/* =====================================================
-                            PAGE 4
-                        ===================================================== */}
+                        {/* PAGE 4 */}
 
                         {
                             isPageAvailable(4) && (
@@ -969,9 +964,7 @@ const ProductsTable = () => {
                         }
 
 
-                        {/* =====================================================
-                            PAGE 5
-                        ===================================================== */}
+                        {/* PAGE 5 */}
 
                         {
                             isPageAvailable(5) && (
@@ -1009,9 +1002,7 @@ const ProductsTable = () => {
                         }
 
 
-                        {/* =====================================================
-                            NEXT
-                        ===================================================== */}
+                        {/* NEXT */}
 
                         <button
                             type="button"
@@ -1150,10 +1141,35 @@ const ProductsTable = () => {
                             )
                         }
 
-                        onEdit={(product) =>
-                            handleEditProduct(
-                                product
-                            )
+                        onEdit={
+                            handleEditProduct
+                        }
+
+                    />
+
+                )
+            }
+
+
+            {/* =====================================================
+                PRODUCT EDIT
+            ===================================================== */}
+
+            {
+                editingProduct && (
+
+                    <ProductEdit
+
+                        product={
+                            editingProduct
+                        }
+
+                        onClose={
+                            handleCloseEditor
+                        }
+
+                        onSuccess={
+                            handleEditSuccess
                         }
 
                     />

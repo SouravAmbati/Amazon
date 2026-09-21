@@ -1,79 +1,37 @@
-import { createContext, useEffect, useState } from "react"
+import { createContext, useState } from "react";
 import axios from "axios";
-axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL
 
+axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
 
 export const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
     const [products, setProducts] = useState([]);
-
     const [currentPage, setCurrentPage] = useState(1);
-
-    /*
-     * Stores the cursor required to fetch each page.
-     *
-     * Page 1 doesn't need a cursor.
-     *
-     * Example:
-     *
-     * {
-     *     1: null,
-     *     2: "cursor-from-page-1",
-     *     3: "cursor-from-page-2"
-     * }
-     */
-    const [pageCursors, setPageCursors] = useState({
-        1: null
-    });
-
-    /*
-     * Store already fetched pages.
-     *
-     * This prevents unnecessary API calls when
-     * going back to a page we already visited.
-     */
+    const [pageCursors, setPageCursors] = useState({ 1: null });
     const [loadedPages, setLoadedPages] = useState({});
-
     const [hasNextPage, setHasNextPage] = useState(true);
-
     const [loading, setLoading] = useState(false);
 
-
-    // =====================================================
+    // --------------------------------------------------
     // GET PRODUCTS
-    // =====================================================
+    // --------------------------------------------------
 
     const GetProducts = async (page = 1) => {
-
-        if (loading) {
-            return;
-        }
+        if (loading) return;
 
         try {
-
             setLoading(true);
 
-
-            // Get cursor required for this page
-
             const cursor = pageCursors[page] || null;
-
 
             const params = {};
 
             if (cursor) {
-
                 params.cursor = cursor;
-
             }
 
-
-            console.log(
-                `Fetching page ${page}`,
-                params
-            );
-
+            console.log(`Fetching page ${page}`, params);
 
             const res = await axios.get(
                 "/api/product/v1/product",
@@ -82,117 +40,64 @@ export const ProductProvider = ({ children }) => {
                 }
             );
 
-
             const response = res.data;
+            console.log("debug",response);
 
+            console.log(`Page ${page} response:`, response);
 
-            console.log(
-                `Page ${page} response:`,
-                response
-            );
+            const formattedProducts = response.data.map((product) => ({
+                id: product.id,
 
+                name: product.product_name,
 
-            // =====================================================
-            // FORMAT PRODUCTS
-            // =====================================================
+                category: product.category,
 
-            const formattedProducts = response.data.map(
-                (product) => ({
+                price: Number(product.price),
 
-                    id: product.id,
+                description: product.about_product,
 
-                    name: product.product_name,
+                sizes: Array.isArray(product.sizes)
+                    ? product.sizes
+                    : [],
 
-                    category: product.category,
+                colors: product.colors
+                    ? (
+                        Array.isArray(product.colors)
+                            ? product.colors
+                            : [product.colors]
+                    )
+                    : [],
 
-                    price: Number(product.price),
-
-                    description: product.about_product,
-
-                    sizes: Array.isArray(product.sizes)
-                        ? product.sizes
+                images: Array.isArray(product.images)
+                    ? product.images
+                    : product.images
+                        ? [product.images]
                         : [],
 
-                    colors: product.colors
-                        ? (
-                            Array.isArray(product.colors)
-                                ? product.colors
-                                : [product.colors]
-                        )
-                        : [],
+                // IMPORTANT:
+                // Required by PATCH /product
+                imageId: product.image_id,
 
-                    /*
-                     * Your database image_url is an array.
-                     *
-                     * Therefore don't wrap an array inside
-                     * another array.
-                     */
-                    images: Array.isArray(product.images)
-                        ? product.images
-                        : product.images
-                            ? [product.images]
-                            : []
+                colorId: product.color_id
+            }));
 
-                })
-            );
-
-
-            // =====================================================
-            // SAVE PAGE DATA
-            // =====================================================
-
-            setLoadedPages(
-                (previousPages) => ({
-
-                    ...previousPages,
-
-                    [page]: formattedProducts
-
-                })
-            );
-
-
-            // =====================================================
-            // DISPLAY PAGE
-            // =====================================================
+            setLoadedPages((previousPages) => ({
+                ...previousPages,
+                [page]: formattedProducts
+            }));
 
             setProducts(formattedProducts);
 
-
-            // =====================================================
-            // CURRENT PAGE
-            // =====================================================
-
             setCurrentPage(page);
 
-
-            // =====================================================
-            // SAVE CURSOR FOR NEXT PAGE
-            // =====================================================
-
             if (response.cursor) {
-
-                setPageCursors(
-                    (previousCursors) => ({
-
-                        ...previousCursors,
-
-                        [page + 1]: response.cursor
-
-                    })
-                );
-
+                setPageCursors((previousCursors) => ({
+                    ...previousCursors,
+                    [page + 1]: response.cursor
+                }));
             }
 
-
-            // =====================================================
-            // HAS NEXT PAGE
-            // =====================================================
-
-            setHasNextPage(
-                response.hasNextPage
-            );
-
+            setHasNextPage(response.hasNextPage);
 
         } catch (error) {
 
@@ -202,131 +107,104 @@ export const ProductProvider = ({ children }) => {
             );
 
         } finally {
-
             setLoading(false);
-
         }
-
     };
 
 
-    // =====================================================
+    // --------------------------------------------------
     // CHANGE PAGE
-    // =====================================================
+    // --------------------------------------------------
 
     const ChangePage = async (page) => {
 
-        if (loading) {
-            return;
-        }
+        if (loading) return;
 
-
-        /*
-         * If this page was already loaded,
-         * don't make another API request.
-         */
-
+        // Already loaded
         if (loadedPages[page]) {
 
-            setProducts(
-                loadedPages[page]
-            );
+            setProducts(loadedPages[page]);
 
             setCurrentPage(page);
-
-
-            /*
-             * If we have a cursor for the next page,
-             * another page exists.
-             */
 
             setHasNextPage(
                 Boolean(pageCursors[page + 1])
             );
 
             return;
-
         }
 
-
-        /*
-         * Don't allow fetching a page if we don't
-         * have the cursor required for that page.
-         *
-         * Page 1 is the only exception.
-         */
-
-        if (
-            page !== 1 &&
-            !pageCursors[page]
-        ) {
-
+        // Page doesn't have cursor
+        if (page !== 1 && !pageCursors[page]) {
             return;
-
         }
-
 
         await GetProducts(page);
-
     };
 
 
-    // =====================================================
+    // --------------------------------------------------
     // NEXT PAGE
-    // =====================================================
+    // --------------------------------------------------
 
     const NextPage = async () => {
 
-        if (
-            loading ||
-            !hasNextPage
-        ) {
-
+        if (loading || !hasNextPage) {
             return;
-
         }
 
+        const nextPage = currentPage + 1;
 
-        const nextPage =
-            currentPage + 1;
-
-
-        await ChangePage(
-            nextPage
-        );
-
+        await ChangePage(nextPage);
     };
 
 
-    // =====================================================
+    // --------------------------------------------------
     // PREVIOUS PAGE
-    // =====================================================
+    // --------------------------------------------------
 
     const PreviousPage = async () => {
 
-        if (
-            loading ||
-            currentPage <= 1
-        ) {
-
+        if (loading || currentPage <= 1) {
             return;
-
         }
 
-
-        await ChangePage(
-            currentPage - 1
-        );
-
+        await ChangePage(currentPage - 1);
     };
-    const CreateProduct = async (sentProduct, idempotencyKey) => {
+
+
+    // --------------------------------------------------
+    // CREATE PRODUCT
+    // --------------------------------------------------
+
+    const CreateProduct = async (
+        sentProduct,
+        idempotencyKey
+    ) => {
+
         try {
+
             const formData = new FormData();
 
-            formData.append("product_name", sentProduct.name);
-            formData.append("category", sentProduct.category);
-            formData.append("price", sentProduct.price);
-            formData.append("about_product", sentProduct.description);
+            formData.append(
+                "product_name",
+                sentProduct.name
+            );
+
+            formData.append(
+                "category",
+                sentProduct.category
+            );
+
+            formData.append(
+                "price",
+                sentProduct.price
+            );
+
+            formData.append(
+                "about_product",
+                sentProduct.description
+            );
 
             formData.append(
                 "colors",
@@ -338,16 +216,23 @@ export const ProductProvider = ({ children }) => {
                 JSON.stringify(sentProduct.sizes)
             );
 
-            sentProduct.images.forEach((image, index) => {
-                formData.append(`image${index + 1}`, image);
-            });
+            sentProduct.images.forEach(
+                (image, index) => {
+
+                    formData.append(
+                        `image${index + 1}`,
+                        image
+                    );
+
+                }
+            );
 
             const res = await axios.post(
                 "/api/product/v1/product",
                 formData,
                 {
                     headers: {
-                        "IdempotencyKey": idempotencyKey
+                        "idempotencyKey": idempotencyKey
                     }
                 }
             );
@@ -355,10 +240,208 @@ export const ProductProvider = ({ children }) => {
             return res.data.message;
 
         } catch (error) {
-            console.error(error.response?.data || error);
+
+            console.error(
+                "Create product error:",
+                error.response?.data || error
+            );
+
             return null;
         }
     };
+
+
+    // --------------------------------------------------
+    // UPDATE PRODUCT
+    // --------------------------------------------------
+
+    const UpdateProduct = async (
+        product,
+        updatedProduct,
+        idempotencyKey
+    ) => {
+
+        try {
+
+            const formData = new FormData();
+
+            formData.append(
+                "product_name",
+                updatedProduct.name
+            );
+
+            formData.append(
+                "category",
+                updatedProduct.category
+            );
+
+            formData.append(
+                "price",
+                updatedProduct.price
+            );
+
+            formData.append(
+                "about_product",
+                updatedProduct.description
+            );
+
+            formData.append(
+                "colors",
+                JSON.stringify(updatedProduct.colors)
+            );
+
+            formData.append(
+                "sizes",
+                JSON.stringify(updatedProduct.sizes)
+            );
+
+
+            // ------------------------------------------
+            // NEW IMAGES
+            // ------------------------------------------
+
+            if (
+                updatedProduct.images &&
+                updatedProduct.images.length > 0
+            ) {
+
+                updatedProduct.images
+                    .forEach((image, index) => {
+
+                        formData.append(
+                            `image${index + 1}`,
+                            image
+                        );
+
+                    });
+
+            }
+
+
+            // ------------------------------------------
+            // PATCH REQUEST
+            // ------------------------------------------
+
+            const res = await axios.patch(
+                "/api/product/v1/product",
+                formData,
+                {
+                    headers: {
+
+                        // Idempotency key comes
+                        // FROM COMPONENT
+                        "idempotencyKey":
+                            idempotencyKey,
+
+                        product_id:
+                            product.id,
+
+                        image_id:
+                            product.imageId,
+
+                        color_id:
+                            product.colorId
+                    }
+                }
+            );
+
+
+            return {
+                success: true,
+                data: res.data
+            };
+
+        } catch (error) {
+
+            console.error(
+                "Update product error:",
+                error.response?.data || error
+            );
+
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Failed to update product"
+            };
+        }
+    };
+
+
+    // --------------------------------------------------
+    // UPDATE PRODUCT IN LOCAL STATE
+    // --------------------------------------------------
+
+    const UpdateProductInState = (
+        productId,
+        updatedProduct
+    ) => {
+
+        const updateProduct = (product) => {
+
+            if (product.id !== productId) {
+                return product;
+            }
+
+            return {
+                ...product,
+
+                name: updatedProduct.name,
+
+                category: updatedProduct.category,
+
+                price: Number(
+                    updatedProduct.price
+                ),
+
+                description:
+                    updatedProduct.description,
+
+                colors:
+                    updatedProduct.colors,
+
+                sizes:
+                    updatedProduct.sizes,
+
+                // Only replace images if
+                // backend returned/changed them.
+                ...(updatedProduct.images
+                    ? {
+                        images:
+                            updatedProduct.images
+                    }
+                    : {})
+            };
+        };
+
+
+        // Update current products
+        setProducts((previousProducts) =>
+            previousProducts.map(updateProduct)
+        );
+
+
+        // Update every cached page
+        setLoadedPages((previousPages) => {
+
+            const updatedPages = {};
+
+            Object.entries(previousPages)
+                .forEach(([page, pageProducts]) => {
+
+                    updatedPages[page] =
+                        pageProducts.map(
+                            updateProduct
+                        );
+
+                });
+
+            return updatedPages;
+        });
+    };
+
+
     return (
         <ProductContext.Provider
             value={{
@@ -380,10 +463,14 @@ export const ProductProvider = ({ children }) => {
 
                 PreviousPage,
 
-                CreateProduct
+                CreateProduct,
+
+                UpdateProduct,
+
+                UpdateProductInState
             }}
         >
             {children}
         </ProductContext.Provider>
-    )
-}
+    );
+};
