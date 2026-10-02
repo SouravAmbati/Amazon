@@ -1,7 +1,7 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { createSignedUrl } from "./createSignedUrlForUpload.js";
 
-export const imageUpload = async (images) => {
+export const imageUploadURL = async (images) => {
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const allowedTypes = [

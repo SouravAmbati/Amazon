@@ -8,7 +8,7 @@ import {
   createProductSchema,
   updateProductSchema,
 } from "./AdminValidators/productValidator.js";
-import {imageUpload } from "../../utils/ImageUpload.js";
+import {imageUploadURL } from "../../utils/ImageUpload.js";
 import { cursorSchema } from "./AdminValidators/cursorValidator.js";
 
 export const createProduct = async (req, res) => {
@@ -75,15 +75,13 @@ export const createProduct = async (req, res) => {
     });
   }
 };
-export const createProducts = async (req, res) => {
+export const putUploadURL = async (req, res) => {
   try {
     const body = {
-      ...req.body,
-      colors: req.body.colors,
-      sizes: req.body.sizes,
+      ...req.body
     };
-    const imageMetaData = Object.values(req.body.image);
-    let result = await imageUpload(imageMetaData);
+    const imageMetaData = Object.values(body);
+    let result = await imageUploadURL(imageMetaData);
     if (result) {
       const imageKeys = [
         {
@@ -99,7 +97,25 @@ export const createProducts = async (req, res) => {
           key: `/uploads/product_images/${imageMetaData[3].name}`,
         },
       ];
-      const { data, error } = createProductSchema.safeParse(body);
+      res.status(201).json({
+        images: result,
+        imagesKeys:imageKeys
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.json({success:false,error:error.message})
+  }
+};
+export const createProducts=async(req,res)=>{
+  try {
+     const body = {
+      ...req.body,
+      colors: req.body.colors,
+      sizes: req.body.sizes,
+    };
+    let imageKeys=[];
+    const { data, error } = createProductSchema.safeParse(body);
       const idempotencyKey = req.get("IdempotencyKey");
       if (!idempotencyKey) {
         return res.status(400).json({
@@ -112,6 +128,9 @@ export const createProducts = async (req, res) => {
           .status(400)
           .json({ success: false, message: error.issues[0].message });
       }
+        body.imagesKeys.forEach(element => {
+          imageKeys.push(element.key);
+        });
       const response = await createProductService(
         idempotencyKey,
         data.product_name,
@@ -124,14 +143,12 @@ export const createProducts = async (req, res) => {
       );
       res.status(201).json({
         ...response,
-        images: result,
       });
-    }
   } catch (error) {
     console.log(error);
     return res.json({error:error.message})
   }
-};
+}
 export const getAllProducts = async (req, res) => {
   const { cursor } = req.query;
   const body = {
