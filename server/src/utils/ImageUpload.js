@@ -6,6 +6,7 @@ export const imageUploadURL = async (images) => {
 
   const allowedTypes = [
     "image/jpeg",
+    "image/jpg",
     "image/png",
   ];
 
@@ -19,7 +20,7 @@ export const imageUploadURL = async (images) => {
       );
     }
 
-    if (!allowedTypes.includes(image.format)) {
+    if (!allowedTypes.includes(image.type)) {
       throw new Error(
         `${image.name} has an invalid image format. Only JPG, JPEG and PNG are allowed`
       );
@@ -43,7 +44,7 @@ export const imageUploadURL = async (images) => {
 async function putObjectUrl(filename,contentType){
   const command=new PutObjectCommand({
     Bucket:process.env.B2_BUCKET_NAME,
-    Key:`/uploads/product_images/${filename}`,
+    Key:`uploads/product_images/${filename}`,
      ContentType: contentType,
   })
   return command;

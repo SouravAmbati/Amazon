@@ -23,6 +23,7 @@ const CreateProduct = () => {
     const { CreateProduct } = useContext(ProductContext);
 
     const [images, setImages] = useState([]);
+    const [imageFormat,setImageFormats]= useState([]);
     const [selectedColor, setSelectedColor] = useState("#000000");
 
     const fileInputRef = useRef(null);
@@ -60,7 +61,13 @@ const CreateProduct = () => {
 
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
-
+        setImageFormats()
+        const ImagemetaData=files.map((file) => ({
+            name: file.name,
+            type: file.type,
+            size: file.size
+        }));
+        setImageFormats(ImagemetaData);
         const remainingImageSlots = 4 - images.length;
 
         const selectedFiles = files.slice(
@@ -149,10 +156,7 @@ const CreateProduct = () => {
             images: images.map((image) => image.file)
         };
 
-        console.log("SUBMIT FIRED");
-        console.log(productData);
-
-        const res = await CreateProduct(productData,idempotencyKey);
+        const res = await CreateProduct(productData,idempotencyKey,imageFormat);
 
         if (res) {
             toast.success(res);

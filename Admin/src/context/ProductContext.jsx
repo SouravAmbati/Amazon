@@ -41,7 +41,7 @@ export const ProductProvider = ({ children }) => {
             );
 
             const response = res.data;
-            console.log("debug",response);
+            console.log("debug", response);
 
             console.log(`Page ${page} response:`, response);
 
@@ -179,60 +179,53 @@ export const ProductProvider = ({ children }) => {
 
     const CreateProduct = async (
         sentProduct,
-        idempotencyKey
+        idempotencyKey,
+        imageFormat
     ) => {
-
         try {
 
-            const formData = new FormData();
-
-            formData.append(
-                "product_name",
-                sentProduct.name
+            // 1. Get signed upload URLs
+            const imageUrls = await axios.post(
+                "/api/product/v2/get-upload-urls",
+                imageFormat
             );
 
-            formData.append(
-                "category",
-                sentProduct.category
-            );
+            const { images, imagesKeys } = imageUrls.data;
+            const productData = {
+                product_name: sentProduct.name,
+                category: sentProduct.category,
+                price: sentProduct.price,
+                about_product: sentProduct.description,
+                colors: sentProduct.colors,
+                sizes: sentProduct.sizes,
+                imagesKeys: imagesKeys,
+            };
 
-            formData.append(
-                "price",
-                sentProduct.price
-            );
-
-            formData.append(
-                "about_product",
-                sentProduct.description
-            );
-
-            formData.append(
-                "colors",
-                JSON.stringify(sentProduct.colors)
-            );
-
-            formData.append(
-                "sizes",
-                JSON.stringify(sentProduct.sizes)
-            );
-
-            sentProduct.images.forEach(
+            // 2. Upload all images to Backblaze
+            const uploadPromises = sentProduct.images.map(
                 (image, index) => {
-
-                    formData.append(
-                        `image${index + 1}`,
-                        image
+                    return axios.put(
+                        images[index].url,
+                        image,
+                        {
+                            headers: {
+                                "Content-Type": image.type,
+                            },
+                        }
                     );
-
                 }
             );
 
+            // This waits until ALL uploads succeed
+            await Promise.all(uploadPromises);
+
+            // 4. Now create the product
             const res = await axios.post(
-                "/api/product/v1/product",
-                formData,
+                "/api/product/v2/product",
+                productData,
                 {
                     headers: {
-                        "idempotencyKey": idempotencyKey
+                        idempotencyKey: idempotencyKey
                     }
                 }
             );
@@ -240,7 +233,6 @@ export const ProductProvider = ({ children }) => {
             return res.data.message;
 
         } catch (error) {
-
             console.error(
                 "Create product error:",
                 error.response?.data || error

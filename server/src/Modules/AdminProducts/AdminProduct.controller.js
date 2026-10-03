@@ -77,26 +77,12 @@ export const createProduct = async (req, res) => {
 };
 export const putUploadURL = async (req, res) => {
   try {
-    const body = {
-      ...req.body
-    };
-    const imageMetaData = Object.values(body);
+    const imageMetaData = req.body;
     let result = await imageUploadURL(imageMetaData);
     if (result) {
-      const imageKeys = [
-        {
-          key: `/uploads/product_images/${imageMetaData[0].name}`,
-        },
-        {
-          key: `/uploads/product_images/${imageMetaData[1].name}`,
-        },
-        {
-          key: `/uploads/product_images/${imageMetaData[2].name}`,
-        },
-        {
-          key: `/uploads/product_images/${imageMetaData[3].name}`,
-        },
-      ];
+      const imageKeys = imageMetaData.map((image) => ({
+        key: `/uploads/product_images/${image.name}`,
+      }));
       res.status(201).json({
         images: result,
         imagesKeys:imageKeys
@@ -107,48 +93,57 @@ export const putUploadURL = async (req, res) => {
     return res.json({success:false,error:error.message})
   }
 };
-export const createProducts=async(req,res)=>{
+export const createProducts = async (req, res) => {
   try {
-     const body = {
-      ...req.body,
-      colors: req.body.colors,
-      sizes: req.body.sizes,
-    };
-    let imageKeys=[];
-    const { data, error } = createProductSchema.safeParse(body);
-      const idempotencyKey = req.get("IdempotencyKey");
-      if (!idempotencyKey) {
-        return res.status(400).json({
-          success: false,
-          message: "Idempotency-Key header is required",
-        });
-      }
-      if (error) {
-        return res
-          .status(400)
-          .json({ success: false, message: error.issues[0].message });
-      }
-        body.imagesKeys.forEach(element => {
-          imageKeys.push(element.key);
-        });
-      const response = await createProductService(
-        idempotencyKey,
-        data.product_name,
-        data.colors,
-        imageKeys,
-        data.sizes,
-        data.about_product,
-        data.price,
-        data.category,
-      );
-      res.status(201).json({
-        ...response,
+
+    const idempotencyKey = req.get("IdempotencyKey");
+
+    if (!idempotencyKey) {
+      return res.status(400).json({
+        success: false,
+        message: "Idempotency-Key header is required",
       });
+    }
+
+    // Validate AFTER converting JSON strings to arrays
+    const { data, error } = createProductSchema.safeParse(req.body);
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.issues[0].message,
+      });
+    }
+
+    // imagesKeys is also a JSON string because it came through FormData
+    const imagesKeys = req.body.imagesKeys;
+
+    const imageKeys = imagesKeys.map((element) => element.key);
+
+    const response = await createProductService(
+      idempotencyKey,
+      data.product_name,
+      data.colors,
+      imageKeys,
+      data.sizes,
+      data.about_product,
+      data.price,
+      data.category,
+    );
+
+    return res.status(201).json({
+      ...response,
+    });
+
   } catch (error) {
     console.log(error);
-    return res.json({error:error.message})
+
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
-}
+};
 export const getAllProducts = async (req, res) => {
   const { cursor } = req.query;
   const body = {
