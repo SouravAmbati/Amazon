@@ -125,3 +125,86 @@ export async function getProductsByCategoryRepository(type,limit){
     client.release();
   }
 }
+export async function getProductByFilterRepository(
+    type,
+    limit,
+    price1,
+    price2
+) {
+
+    const client = await pool.connect();
+
+    try {
+
+        let result;
+
+
+        if (price2 === null) {
+
+            result = await client.query(
+                `
+                SELECT
+                    p.id,
+                    p.product_name,
+                    p.price,
+                    i.image_url AS images
+                FROM product p
+                INNER JOIN images i
+                    ON p.img = i.id
+                WHERE p.category = $1
+                  AND p.price >= $3
+                ORDER BY p.id ASC
+                LIMIT $2
+                `,
+                [
+                    type,
+                    limit,
+                    price1,
+                ]
+            );
+
+        } else {
+
+            result = await client.query(
+                `
+                SELECT
+                    p.id,
+                    p.product_name,
+                    p.price,
+                    i.image_url AS images
+                FROM product p
+                INNER JOIN images i
+                    ON p.img = i.id
+                WHERE p.category = $1
+                  AND p.price BETWEEN $3 AND $4
+                ORDER BY p.id ASC
+                LIMIT $2
+                `,
+                [
+                    type,
+                    limit,
+                    price1,
+                    price2,
+                ]
+            );
+
+        }
+
+
+        return {
+            success: true,
+            data: result.rows,
+        };
+
+
+    } catch (error) {
+
+        throw error;
+
+    } finally {
+
+        client.release();
+
+    }
+
+}

@@ -13,21 +13,17 @@ import { ProductContext } from "../../contexts/ProductContext.jsx";
 
 
 
-
 const SpecificCategoryProduct = () => {
 
     const [searchParams] = useSearchParams();
 
 
     /*
-        Get query parameters
-
         Example:
 
         /product?type=Beauty&limit=10
 
-        type = Beauty
-        limit = 10
+        /product?type=Beauty&limit=10&price=500-1000
     */
 
     const type = searchParams.get("type");
@@ -39,37 +35,16 @@ const SpecificCategoryProduct = () => {
         searchParams.get("price");
 
 
-    /*
-        Product Context
-    */
-
     const {
         getProductsByCategory,
+        getProductsByFilter,
     } = useContext(ProductContext);
 
 
-    /*
-        Products returned by API
-    */
-
     const [products, setProducts] = useState([]);
-
-
-    /*
-        Loading state specifically
-        for category page
-    */
 
     const [loading, setLoading] = useState(false);
 
-
-    /*
-        Fetch products whenever:
-
-        type changes
-        limit changes
-        price changes
-    */
 
     useEffect(() => {
 
@@ -85,125 +60,118 @@ const SpecificCategoryProduct = () => {
                 setLoading(true);
 
 
+                let response;
+
+
                 /*
-                    Call backend API
+                    NO PRICE FILTER
 
-                    GET:
+                    Call:
 
-                    /api/products/v1/category
-                        ?type=Beauty
-                        &limit=10
+                    /category?type=Beauty&limit=10
                 */
 
-                const response =
-                    await getProductsByCategory(
-                        type,
-                        limit
+                if (!price) {
+
+                    console.log(
+                        "No price filter selected"
                     );
+
+
+                    response =
+                        await getProductsByCategory(
+                            type,
+                            limit
+                        );
+
+                }
+
+
+                /*
+                    PRICE FILTER SELECTED
+
+                    Example:
+
+                    price = 500-1000
+
+                    Call:
+
+                    /filter
+                        ?type=Beauty
+                        &limit=10
+                        &price=500-1000
+                */
+
+                else {
+
+                    console.log(
+                        "Price filter selected:",
+                        price
+                    );
+
+
+                    response =
+                        await getProductsByFilter(
+                            type,
+                            limit,
+                            price
+                        );
+
+                }
 
 
                 if (!response.success) {
 
                     console.error(
-                        "Category API error:",
+                        "Product API error:",
                         response.message
                     );
 
                     setProducts([]);
 
                     return;
-                }
-
-
-                /*
-                    Backend returns:
-
-                    {
-                        id,
-                        product_name,
-                        price,
-                        images
-                    }
-
-                    But CategoryCard expects:
-
-                    {
-                        id,
-                        name,
-                        price,
-                        images
-                    }
-                */
-
-                let formattedProducts =
-                    response.data.map((product) => ({
-
-                        id: product.id,
-
-                        name: product.product_name,
-
-                        price: product.price,
-
-                        images: product.images || [],
-
-                    }));
-
-
-                /*
-                    Price filtering
-
-                    Your current backend API doesn't
-                    receive the price parameter.
-
-                    So for now price filtering
-                    happens on the frontend.
-                */
-
-                if (price) {
-
-                    const [min, max] =
-                        price.split("-");
-
-
-                    formattedProducts =
-                        formattedProducts.filter(
-                            (product) => {
-
-                                const productPrice =
-                                    Number(product.price);
-
-
-                                if (max === "max") {
-
-                                    return (
-                                        productPrice >=
-                                        Number(min)
-                                    );
-
-                                }
-
-
-                                return (
-                                    productPrice >=
-                                        Number(min) &&
-
-                                    productPrice <=
-                                        Number(max)
-                                );
-
-                            }
-                        );
 
                 }
 
 
-                setProducts(formattedProducts);
+                /*
+                    Backend:
+
+                    product_name
+
+                    Frontend CategoryCard:
+
+                    name
+                */
+
+                const formattedProducts =
+                    response.data.map(
+                        (product) => ({
+
+                            id: product.id,
+
+                            name:
+                                product.product_name,
+
+                            price:
+                                product.price,
+
+                            images:
+                                product.images || [],
+
+                        })
+                    );
+
+
+                setProducts(
+                    formattedProducts
+                );
 
 
             } catch (error) {
 
                 console.error(
-                    "Fetch category products error:",
+                    "Fetch products error:",
                     error
                 );
 
@@ -226,6 +194,7 @@ const SpecificCategoryProduct = () => {
         limit,
         price,
         getProductsByCategory,
+        getProductsByFilter,
     ]);
 
 
@@ -327,7 +296,12 @@ const SpecificCategoryProduct = () => {
                 {!loading &&
                     products.length === 0 && (
 
-                    <div className="py-10 text-center">
+                    <div
+                        className="
+                            py-10
+                            text-center
+                        "
+                    >
 
                         <p className="text-gray-500">
                             No products found.
@@ -342,6 +316,7 @@ const SpecificCategoryProduct = () => {
         </div>
 
     );
+
 };
 
 

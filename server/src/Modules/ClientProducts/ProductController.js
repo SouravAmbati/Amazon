@@ -1,5 +1,5 @@
 import { cursorSchema } from "../AdminProducts/AdminValidators/cursorValidator.js";
-import { getProductByCategoryService, getProductByIdService, getProductService } from "./ProductService.js"
+import { getProductByCategoryService, getProductByFilterService, getProductByIdService, getProductService } from "./ProductService.js"
 
 
 export const getProductController = async(req,res)=>{
@@ -37,7 +37,6 @@ export const getProductByIdController=async(req,res)=>{
 export const getProductByCategoryController=async(req,res)=>{
     try {
         const { type,limit } = req.query;
-        console.log(type,limit);
         if (!type||!limit) {
               return res
                 .status(400)
@@ -49,3 +48,79 @@ export const getProductByCategoryController=async(req,res)=>{
         res.status(500).json(error.message);
     }
 }
+export const getProductsByFilterController = async (req, res) => {
+
+    try {
+
+        const { type, limit, price } = req.query;
+
+
+        if (!type || !limit || !price) {
+
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message: "Request invalid",
+                });
+
+        }
+
+
+        const splitPrice = price.split("-");
+
+        const price1 = Number(splitPrice[0]);
+
+        const price2 =
+            splitPrice[1] === "max"
+                ? null
+                : Number(splitPrice[1]);
+
+
+        if (
+            Number.isNaN(price1) ||
+            (
+                price2 !== null &&
+                Number.isNaN(price2)
+            )
+        ) {
+
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message: "Invalid price range",
+                });
+
+        }
+
+
+        const response =
+            await getProductByFilterService(
+                type,
+                Number(limit),
+                price1,
+                price2
+            );
+
+
+        res.status(200).json(response);
+
+
+    } catch (error) {
+
+        console.error(
+            "Filter controller error:",
+            error
+        );
+
+        res
+            .status(500)
+            .json({
+                success: false,
+                message: error.message,
+            });
+
+    }
+
+};

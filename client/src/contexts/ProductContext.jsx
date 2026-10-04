@@ -384,6 +384,86 @@ export const ProductProvider = ({ children }) => {
         },
         []
     );
+    const getProductsByFilter = useCallback(
+        async (type, limit = 10, price) => {
+
+            try {
+
+                console.log(
+                    "Fetching filtered products:",
+                    {
+                        type,
+                        limit,
+                        price,
+                    }
+                );
+
+
+                const response = await axios.get(
+                    "/api/products/v1/filter",
+                    {
+                        params: {
+                            type,
+                            limit,
+                            price,
+                        },
+                    }
+                );
+
+
+                const result = response.data;
+
+
+                console.log(
+                    "Filter products API response:",
+                    result
+                );
+
+
+                if (!result.success) {
+
+                    throw new Error(
+                        result.message ||
+                        "Failed to fetch filtered products"
+                    );
+
+                }
+
+
+                return {
+                    success: true,
+
+                    data: Array.isArray(result.data)
+                        ? result.data
+                        : [],
+                };
+
+
+            } catch (error) {
+
+                console.error(
+                    "Get filtered products error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+
+                return {
+                    success: false,
+
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to fetch filtered products",
+
+                    data: [],
+                };
+
+            }
+
+        },
+        []
+    );
 
 
     return (
@@ -399,6 +479,7 @@ export const ProductProvider = ({ children }) => {
                 productDetailLoading,
                 getProductById,
                 getProductsByCategory,
+                getProductsByFilter,
             }}
         >
             {children}
