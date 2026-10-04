@@ -22,6 +22,12 @@ export const ProductProvider = ({ children }) => {
 
     const [hasNextPage, setHasNextPage] = useState(true);
 
+    // Product detail
+    const [productDetail, setProductDetail] = useState(null);
+
+    const [productDetailLoading, setProductDetailLoading] = useState(false);
+
+
     // Prevent multiple API calls at the same time
     const loadingRef = useRef(false);
 
@@ -29,14 +35,18 @@ export const ProductProvider = ({ children }) => {
     const initializedRef = useRef(false);
 
 
+    /*
+        =====================================================
+        GET PRODUCTS
+        =====================================================
+    */
+
     const getProducts = useCallback(async (nextCursor = null) => {
 
-        // Don't make another request while current request is running
         if (loadingRef.current) {
             return;
         }
 
-        // Don't request if we already know there are no more products
         if (!hasNextPage && nextCursor !== null) {
             return;
         }
@@ -48,11 +58,6 @@ export const ProductProvider = ({ children }) => {
 
             let url = "/api/products/v1/products";
 
-            // First request:
-            // /api/products/v1/products
-
-            // Next requests:
-            // /api/products/v1/products?cursor=xxxxx
             if (nextCursor) {
                 url += `?cursor=${nextCursor}`;
             }
@@ -78,8 +83,6 @@ export const ProductProvider = ({ children }) => {
                 : [];
 
 
-            // If backend returned no products,
-            // there are no more products to load.
             if (newProducts.length === 0) {
 
                 setHasNextPage(false);
@@ -88,28 +91,16 @@ export const ProductProvider = ({ children }) => {
             }
 
 
-            // Add new products to existing products
             setProducts((previousProducts) => [
                 ...previousProducts,
                 ...newProducts,
             ]);
 
 
-            // Save cursor for next request
             setCursor(result.cursor);
 
-
-            /*
-                Your backend currently returns:
-
-                hasNextPage: result.rows.length
-
-                which is a number.
-
-                We only need to know whether the backend
-                returned products here.
-            */
             setHasNextPage(true);
+
 
         } catch (error) {
 
@@ -129,11 +120,150 @@ export const ProductProvider = ({ children }) => {
 
 
     /*
-        Initial API request.
-
-        StrictMode can execute effects twice in development,
-        so initializedRef prevents duplicate initial requests.
+        =====================================================
+        GET PRODUCT BY ID
+        =====================================================
     */
+
+    const getProductById = useCallback(async (productid) => {
+
+        try {
+
+            setProductDetailLoading(true);
+
+            console.log(
+                "Fetching product:",
+                productid
+            );
+
+
+            const response = await axios.get(
+                `/api/products/v1/product?productid=${productid}`
+            );
+
+
+            const result = response.data;
+
+            console.log(
+                "Product detail API response:",
+                result
+            );
+
+
+            if (!result.success) {
+                throw new Error(
+                    result.message || "Failed to fetch product"
+                );
+            }
+
+
+            /*
+                Backend returns:
+
+                {
+                    success: true,
+                    data: [
+                        {
+                            id,
+                            product_name,
+                            img,
+                            color,
+                            category,
+                            sizes,
+                            about_product,
+                            price,
+                            created_at
+                        }
+                    ]
+                }
+            */
+
+            const product = result.data?.[0];
+
+
+            if (!product) {
+                throw new Error("Product not found");
+            }
+
+
+            /*
+                Find the same product from the products
+                already fetched by the homepage.
+
+                This gives us:
+                - images
+                - colors
+                - image_id
+                - color_id
+            */
+
+            const existingProduct = products.find(
+                (item) => item.id === product.id
+            );
+
+
+            /*
+                Combine API detail data with the already
+                available image/color information.
+            */
+
+            const completeProduct = {
+                ...product,
+
+                images:
+                    existingProduct?.images || [],
+
+                colors:
+                    existingProduct?.colors || [],
+
+                image_id:
+                    existingProduct?.image_id || product.img,
+
+                color_id:
+                    existingProduct?.color_id || product.color,
+            };
+
+
+            setProductDetail(completeProduct);
+
+            return {
+                success: true,
+                data: completeProduct,
+            };
+
+
+        } catch (error) {
+
+            console.error(
+                "Get product detail error:",
+                error.response?.data || error.message
+            );
+
+
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Failed to fetch product",
+            };
+
+
+        } finally {
+
+            setProductDetailLoading(false);
+
+        }
+
+    }, [products]);
+
+
+    /*
+        =====================================================
+        INITIAL PRODUCTS REQUEST
+        =====================================================
+    */
+
     useEffect(() => {
 
         if (initializedRef.current) {
@@ -148,8 +278,11 @@ export const ProductProvider = ({ children }) => {
 
 
     /*
-        Called when the user reaches the bottom.
+        =====================================================
+        LOAD MORE PRODUCTS
+        =====================================================
     */
+
     const loadMoreProducts = useCallback(() => {
 
         if (loadingRef.current) {
@@ -166,7 +299,11 @@ export const ProductProvider = ({ children }) => {
 
         getProducts(cursor);
 
-    }, [cursor, hasNextPage, getProducts]);
+    }, [
+        cursor,
+        hasNextPage,
+        getProducts,
+    ]);
 
 
     return (
@@ -176,6 +313,11 @@ export const ProductProvider = ({ children }) => {
                 loading,
                 hasNextPage,
                 loadMoreProducts,
+
+                // Product detail
+                productDetail,
+                productDetailLoading,
+                getProductById,
             }}
         >
             {children}

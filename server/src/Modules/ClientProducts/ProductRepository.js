@@ -83,3 +83,18 @@ export async function getProductsRepository(cursor) {
     client.release();
   }
 }
+export async function getProductByIdRepository(productid){
+  const client = await pool.connect();
+  try {
+    const result=await client.query("SELECT * FROM product WHERE id=$1",[productid]);
+    const response = {
+      success: true,
+      data:result.rows,
+    };
+    return response
+  } catch (error) {
+    throw error
+  } finally{
+    client.release();
+  }
+}
