@@ -304,6 +304,86 @@ export const ProductProvider = ({ children }) => {
         hasNextPage,
         getProducts,
     ]);
+    const getProductsByCategory = useCallback(
+        async (type, limit = 10) => {
+
+            try {
+
+                setLoading(true);
+
+                console.log(
+                    "Fetching category products:",
+                    type,
+                    limit
+                );
+
+
+                const response = await axios.get(
+                    "/api/products/v1/category",
+                    {
+                        params: {
+                            type,
+                            limit,
+                        },
+                    }
+                );
+
+
+                const result = response.data;
+
+
+                console.log(
+                    "Category products API response:",
+                    result
+                );
+
+
+                if (!result.success) {
+
+                    throw new Error(
+                        result.message ||
+                        "Failed to fetch category products"
+                    );
+
+                }
+
+
+                return {
+                    success: true,
+                    data: Array.isArray(result.data)
+                        ? result.data
+                        : [],
+                };
+
+
+            } catch (error) {
+
+                console.error(
+                    "Get category products error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+
+                return {
+                    success: false,
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to fetch category products",
+                    data: [],
+                };
+
+
+            } finally {
+
+                setLoading(false);
+
+            }
+
+        },
+        []
+    );
 
 
     return (
@@ -318,6 +398,7 @@ export const ProductProvider = ({ children }) => {
                 productDetail,
                 productDetailLoading,
                 getProductById,
+                getProductsByCategory,
             }}
         >
             {children}

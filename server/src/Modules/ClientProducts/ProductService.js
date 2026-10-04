@@ -1,4 +1,4 @@
-import { getProductByIdRepository, getProductsRepository } from "./ProductRepository.js";
+import { getProductByIdRepository, getProductsByCategoryRepository, getProductsRepository } from "./ProductRepository.js";
 
 
 export async function getProductService(cursor){
@@ -6,4 +6,7 @@ export async function getProductService(cursor){
 }
 export async function getProductByIdService(productid){
     return await getProductByIdRepository(productid);
+}
+export async function getProductByCategoryService(type,limit){
+    return await getProductsByCategoryRepository(type,limit);
 }

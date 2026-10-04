@@ -1,5 +1,5 @@
 import { cursorSchema } from "../AdminProducts/AdminValidators/cursorValidator.js";
-import { getProductByIdService, getProductService } from "./ProductService.js"
+import { getProductByCategoryService, getProductByIdService, getProductService } from "./ProductService.js"
 
 
 export const getProductController = async(req,res)=>{
@@ -29,6 +29,21 @@ export const getProductByIdController=async(req,res)=>{
                 .json({ success: false, message:"productId Unavailable" });
         }
         const response=await getProductByIdService(productid);
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json(error.message);
+    }
+}
+export const getProductByCategoryController=async(req,res)=>{
+    try {
+        const { type,limit } = req.query;
+        console.log(type,limit);
+        if (!type||!limit) {
+              return res
+                .status(400)
+                .json({ success: false, message:"Request invalid" });
+        }
+        const response=await getProductByCategoryService(type,limit);
         res.status(200).json(response);
     } catch (error) {
         res.status(500).json(error.message);

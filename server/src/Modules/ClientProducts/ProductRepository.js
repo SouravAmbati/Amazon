@@ -98,3 +98,30 @@ export async function getProductByIdRepository(productid){
     client.release();
   }
 }
+export async function getProductsByCategoryRepository(type,limit){
+  const client = await pool.connect();
+  try {
+    const result=await client.query(`
+      SELECT
+        p.id,
+        p.product_name,
+        p.price,
+        i.image_url AS images
+    FROM product p
+    INNER JOIN images i
+        ON p.img = i.id
+    WHERE p.category=$1
+    ORDER BY p.id ASC
+    LIMIT $2
+      `,[type,limit]);
+    const response = {
+      success: true,
+      data:result.rows,
+    };
+    return response
+  } catch (error) {
+    throw error
+  } finally{
+    client.release();
+  }
+}
