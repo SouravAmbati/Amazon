@@ -21,12 +21,49 @@ const ProductDetails = () => {
         productDetail,
         productDetailLoading,
         getProductById,
+        addToCart
     } = useContext(ProductContext);
 
 
     const [selectedColor, setSelectedColor] = useState(null);
+    const [addingToCart, setAddingToCart] = useState(false);
 
     const [selectedSize, setSelectedSize] = useState(null);
+    const handleAddToCart = async () => {
+
+        setAddingToCart(true);
+
+        try {
+
+            const response =
+                await addToCart(
+                    productid,
+                    1
+                );
+
+
+            if (!response.success) {
+
+                console.error(
+                    response.message
+                );
+
+                return;
+
+            }
+
+
+            console.log(
+                "Product added to cart"
+            );
+
+        } finally {
+
+            setAddingToCart(false);
+
+        }
+
+    };
 
 
     /*
@@ -529,29 +566,32 @@ const ProductDetails = () => {
 
                             <button
                                 type="button"
+                                onClick={handleAddToCart}
+                                disabled={addingToCart}
                                 className="
-                                    mt-10
-                                    flex
-                                    w-full
-                                    items-center
-                                    justify-center
-                                    rounded-md
-                                    border
-                                    border-transparent
-                                    bg-indigo-600
-                                    px-8
-                                    py-3
-                                    text-base
-                                    font-medium
-                                    text-white
-                                    hover:bg-indigo-700
-                                    focus:ring-2
-                                    focus:ring-indigo-500
-                                    focus:ring-offset-2
-                                    focus:outline-hidden
-                                "
+        mt-10
+        flex
+        w-full
+        items-center
+        justify-center
+        rounded-md
+        border
+        border-transparent
+        bg-indigo-600
+        px-8
+        py-3
+        text-base
+        font-medium
+        text-white
+        hover:bg-indigo-700
+        disabled:cursor-not-allowed
+        disabled:opacity-50
+    "
                             >
-                                Add to Cart
+                                {addingToCart
+                                    ? "Adding..."
+                                    : "Add to Cart"
+                                }
                             </button>
 
 

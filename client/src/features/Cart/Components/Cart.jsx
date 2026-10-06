@@ -1,227 +1,382 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
 
+import React, {
+    useContext,
+    useMemo,
+} from "react";
+
+import { Link } from "react-router-dom";
+
+import { ProductContext } from "../../../contexts/ProductContext.jsx";
 const Cart = () => {
-  return (
-    <div>
-      <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <ul class="space-y-4">
-          <li class="flex items-center gap-4">
-            <img
-              src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&q=80&w=1160"
-              alt=""
-              class="size-16 rounded-sm object-cover"
-            />
 
-            <div>
-              <h3 class="text-sm text-gray-900">Basic Tee 6-Pack</h3>
+    const {
+        cartItems,
+        cartLoading,
+        updateCartCount,
+        removeFromCart
+    } = useContext(ProductContext);
 
-              <dl class="mt-0.5 space-y-px text-[10px] text-gray-600">
-                <div>
-                  <dt class="inline">Size:</dt>
-                  <dd class="inline">XXS</dd>
-                </div>
 
-                <div>
-                  <dt class="inline">Color:</dt>
-                  <dd class="inline">White</dd>
-                </div>
-              </dl>
+    const subtotal = useMemo(() => {
+
+        return cartItems.reduce(
+            (total, item) => {
+
+                return (
+                    total +
+                    Number(item.price) *
+                    Number(item.counts)
+                );
+
+            },
+            0
+        );
+
+    }, [cartItems]);
+
+
+    const handleQuantityChange = async (
+        productId,
+        value
+    ) => {
+
+        const quantity =
+            Math.max(
+                1,
+                Number(value) || 1
+            );
+
+
+        await updateCartCount(
+            productId,
+            quantity
+        );
+
+    };
+
+
+    const handleRemove = async (
+        productId
+    ) => {
+
+        await removeFromCart(
+            productId
+        );
+
+    };
+
+
+    if (cartLoading) {
+
+        return (
+
+            <div className="
+                flex
+                min-h-[400px]
+                items-center
+                justify-center
+            ">
+
+                <div className="
+                    h-10
+                    w-10
+                    animate-spin
+                    rounded-full
+                    border-4
+                    border-gray-300
+                    border-t-indigo-600
+                "/>
+
             </div>
 
-            <div class="flex flex-1 items-center justify-end gap-2">
-              <form>
-                <label for="Line1Qty" class="sr-only"> Quantity </label>
+        );
 
-                <input
-                  type="number"
-                  min="1"
-                  value="1"
-                  id="Line1Qty"
-                  class="h-8 w-12 rounded-sm border-gray-300 bg-white p-0 text-center text-xs text-gray-700 [-moz-appearance:textfield] focus:outline-hidden [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
-                />
-              </form>
+    }
 
-              <button class="text-gray-600 transition hover:text-red-600">
-                <span class="sr-only">Remove item</span>
 
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="size-4"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                  />
-                </svg>
-              </button>
-            </div>
-          </li>
+    return (
 
-          <li class="flex items-center gap-4">
-            <img
-              src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&q=80&w=1160"
-              alt=""
-              class="size-16 rounded-sm object-cover"
-            />
+        <div>
 
-            <div>
-              <h3 class="text-sm text-gray-900">Basic Tee 6-Pack</h3>
-
-              <dl class="mt-0.5 space-y-px text-[10px] text-gray-600">
-                <div>
-                  <dt class="inline">Size:</dt>
-                  <dd class="inline">XXS</dd>
-                </div>
-
-                <div>
-                  <dt class="inline">Color:</dt>
-                  <dd class="inline">White</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div class="flex flex-1 items-center justify-end gap-2">
-              <form>
-                <label for="Line2Qty" class="sr-only"> Quantity </label>
-
-                <input
-                  type="number"
-                  min="1"
-                  value="1"
-                  id="Line2Qty"
-                  class="h-8 w-12 rounded-sm border-gray-300 bg-white p-0 text-center text-xs text-gray-700 [-moz-appearance:textfield] focus:outline-hidden [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
-                />
-              </form>
-
-              <button class="text-gray-600 transition hover:text-red-600">
-                <span class="sr-only">Remove item</span>
-
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="size-4"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                  />
-                </svg>
-              </button>
-            </div>
-          </li>
-
-          <li class="flex items-center gap-4">
-            <img
-              src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&q=80&w=1160"
-              alt=""
-              class="size-16 rounded-sm object-cover"
-            />
-
-            <div>
-              <h3 class="text-sm text-gray-900">Basic Tee 6-Pack</h3>
-
-              <dl class="mt-0.5 space-y-px text-[10px] text-gray-600">
-                <div>
-                  <dt class="inline">Size:</dt>
-                  <dd class="inline">XXS</dd>
-                </div>
-
-                <div>
-                  <dt class="inline">Color:</dt>
-                  <dd class="inline">White</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div class="flex flex-1 items-center justify-end gap-2">
-              <form>
-                <label for="Line3Qty" class="sr-only"> Quantity </label>
-
-                <input
-                  type="number"
-                  min="1"
-                  value="2"
-                  id="Line3Qty"
-                  class="h-8 w-12 rounded-sm border-gray-300 bg-white p-0 text-center text-xs text-gray-700 [-moz-appearance:textfield] focus:outline-hidden [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
-                />
-              </form>
-
-              <button class="text-gray-600 transition hover:text-red-600">
-                <span class="sr-only">Remove item</span>
-
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="size-4"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                  />
-                </svg>
-              </button>
-            </div>
-          </li>
-        </ul>
-
-        <div class="mt-8 space-y-6 border-t border-gray-100 pt-8">
-          <dl class="ml-auto max-w-sm space-y-1 text-sm text-gray-700">
-            <div class="flex justify-between">
-              <dt>Subtotal</dt>
-              <dd>£250</dd>
-            </div>
-
-            <div class="flex justify-between">
-              <dt>VAT</dt>
-              <dd>£25</dd>
-            </div>
-
-            <div class="flex justify-between">
-              <dt>Discount</dt>
-              <dd>-£20</dd>
-            </div>
-
-            <div class="flex justify-between font-semibold">
-              <dt>Total</dt>
-              <dd>£200</dd>
-            </div>
-          </dl>
-
-          <div class="flex items-center justify-end gap-4">
-
-            <Link to={'/payment'}><button
-              class="block rounded-sm border border-blue-600 bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:border-blue-700 hover:bg-blue-700"
+            <div
+                className="
+                    mx-auto
+                    max-w-7xl
+                    px-4
+                    py-8
+                    sm:px-6
+                    lg:px-8
+                "
             >
-              Checkout
-            </button></Link>
-          </div>
 
-          <div class="text-right">
-            <a
-              href="/"
-              class="inline-block text-sm text-gray-600 underline underline-offset-4 transition-colors hover:text-gray-700"
-            >
-              Continue shopping
-            </a>
-          </div>
+                {cartItems.length === 0 ? (
+
+                    <div className="
+                        py-20
+                        text-center
+                    ">
+
+                        <h2 className="
+                            text-xl
+                            font-semibold
+                            text-gray-900
+                        ">
+                            Your cart is empty
+                        </h2>
+
+                        <Link
+                            to="/"
+                            className="
+                                mt-4
+                                inline-block
+                                text-sm
+                                text-indigo-600
+                                underline
+                            "
+                        >
+                            Continue shopping
+                        </Link>
+
+                    </div>
+
+                ) : (
+
+                    <>
+
+                        <ul className="space-y-4">
+
+                            {cartItems.map(
+                                (item) => (
+
+                                    <li
+                                        key={
+                                            item.product_id
+                                        }
+                                        className="
+                                            flex
+                                            items-center
+                                            gap-4
+                                            border-b
+                                            border-gray-100
+                                            pb-4
+                                        "
+                                    >
+
+                                        <img
+                                            src={
+                                                item.images?.[0]
+                                            }
+                                            alt={
+                                                item.product_name
+                                            }
+                                            className="
+                                                size-16
+                                                rounded-sm
+                                                object-cover
+                                            "
+                                        />
+
+
+                                        <div>
+
+                                            <h3 className="
+                                                text-sm
+                                                text-gray-900
+                                            ">
+                                                {
+                                                    item.product_name
+                                                }
+                                            </h3>
+
+
+                                            <p className="
+                                                mt-1
+                                                text-sm
+                                                text-gray-600
+                                            ">
+                                                ₹
+                                                {item.price}
+                                            </p>
+
+                                        </div>
+
+
+                                        <div className="
+                                            flex
+                                            flex-1
+                                            items-center
+                                            justify-end
+                                            gap-4
+                                        ">
+
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={
+                                                    item.counts
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    handleQuantityChange(
+                                                        item.product_id,
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="
+                                                    h-8
+                                                    w-14
+                                                    rounded-sm
+                                                    border
+                                                    border-gray-300
+                                                    bg-white
+                                                    p-0
+                                                    text-center
+                                                    text-xs
+                                                "
+                                            />
+
+
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleRemove(
+                                                        item.product_id
+                                                    )
+                                                }
+                                                className="
+                                                    text-gray-600
+                                                    hover:text-red-600
+                                                "
+                                            >
+
+                                                <span className="
+                                                    text-xl
+                                                ">
+                                                    🗑
+                                                </span>
+
+                                            </button>
+
+                                        </div>
+
+                                    </li>
+
+                                )
+                            )}
+
+                        </ul>
+
+
+                        <div className="
+                            mt-8
+                            space-y-6
+                            border-t
+                            border-gray-100
+                            pt-8
+                        ">
+
+                            <dl className="
+                                ml-auto
+                                max-w-sm
+                                space-y-2
+                                text-sm
+                                text-gray-700
+                            ">
+
+                                <div className="
+                                    flex
+                                    justify-between
+                                ">
+
+                                    <dt>
+                                        Subtotal
+                                    </dt>
+
+                                    <dd>
+                                        ₹
+                                        {subtotal.toFixed(2)}
+                                    </dd>
+
+                                </div>
+
+
+                                <div className="
+                                    flex
+                                    justify-between
+                                    font-semibold
+                                ">
+
+                                    <dt>
+                                        Total
+                                    </dt>
+
+                                    <dd>
+                                        ₹
+                                        {subtotal.toFixed(2)}
+                                    </dd>
+
+                                </div>
+
+                            </dl>
+
+
+                            <div className="
+                                flex
+                                items-center
+                                justify-end
+                            ">
+
+                                <Link
+                                    to="/payment"
+                                    className="
+                                        rounded-sm
+                                        border
+                                        border-blue-600
+                                        bg-blue-600
+                                        px-5
+                                        py-3
+                                        text-sm
+                                        font-semibold
+                                        text-white
+                                        hover:bg-blue-700
+                                    "
+                                >
+                                    Checkout
+                                </Link>
+
+                            </div>
+
+
+                            <div className="
+                                text-right
+                            ">
+
+                                <Link
+                                    to="/"
+                                    className="
+                                        text-sm
+                                        text-gray-600
+                                        underline
+                                    "
+                                >
+                                    Continue shopping
+                                </Link>
+
+                            </div>
+
+                        </div>
+
+                    </>
+
+                )}
+
+            </div>
+
         </div>
-      </div>
-    </div>
-  )
-}
 
-export default Cart
+    );
+
+};
+
+export default Cart;

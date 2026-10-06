@@ -14,6 +14,10 @@ export const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
 
+    // =====================================================
+    // STATE
+    // =====================================================
+
     const [products, setProducts] = useState([]);
 
     const [cursor, setCursor] = useState(null);
@@ -25,21 +29,27 @@ export const ProductProvider = ({ children }) => {
     // Product detail
     const [productDetail, setProductDetail] = useState(null);
 
-    const [productDetailLoading, setProductDetailLoading] = useState(false);
+    const [productDetailLoading, setProductDetailLoading] =
+        useState(false);
+
+    // Cart
+    const [cartItems, setCartItems] = useState([]);
+
+    const [cartLoading, setCartLoading] = useState(false);
 
 
-    // Prevent multiple API calls at the same time
+    // =====================================================
+    // REFS
+    // =====================================================
+
     const loadingRef = useRef(false);
 
-    // Prevent duplicate initial request
     const initializedRef = useRef(false);
 
 
-    /*
-        =====================================================
-        GET PRODUCTS
-        =====================================================
-    */
+    // =====================================================
+    // GET PRODUCTS
+    // =====================================================
 
     const getProducts = useCallback(async (nextCursor = null) => {
 
@@ -54,6 +64,7 @@ export const ProductProvider = ({ children }) => {
         try {
 
             loadingRef.current = true;
+
             setLoading(true);
 
             let url = "/api/products/v1/products";
@@ -70,18 +81,15 @@ export const ProductProvider = ({ children }) => {
 
             console.log("Products API response:", result);
 
-
             if (!result.success) {
                 throw new Error(
                     result.message || "Failed to fetch products"
                 );
             }
 
-
             const newProducts = Array.isArray(result.data)
                 ? result.data
                 : [];
-
 
             if (newProducts.length === 0) {
 
@@ -90,17 +98,14 @@ export const ProductProvider = ({ children }) => {
                 return;
             }
 
-
             setProducts((previousProducts) => [
                 ...previousProducts,
                 ...newProducts,
             ]);
 
-
             setCursor(result.cursor);
 
             setHasNextPage(true);
-
 
         } catch (error) {
 
@@ -112,18 +117,16 @@ export const ProductProvider = ({ children }) => {
         } finally {
 
             loadingRef.current = false;
-            setLoading(false);
 
+            setLoading(false);
         }
 
     }, [hasNextPage]);
 
 
-    /*
-        =====================================================
-        GET PRODUCT BY ID
-        =====================================================
-    */
+    // =====================================================
+    // GET PRODUCT BY ID
+    // =====================================================
 
     const getProductById = useCallback(async (productid) => {
 
@@ -136,11 +139,9 @@ export const ProductProvider = ({ children }) => {
                 productid
             );
 
-
             const response = await axios.get(
                 `/api/products/v1/product?productid=${productid}`
             );
-
 
             const result = response.data;
 
@@ -149,63 +150,21 @@ export const ProductProvider = ({ children }) => {
                 result
             );
 
-
             if (!result.success) {
                 throw new Error(
                     result.message || "Failed to fetch product"
                 );
             }
 
-
-            /*
-                Backend returns:
-
-                {
-                    success: true,
-                    data: [
-                        {
-                            id,
-                            product_name,
-                            img,
-                            color,
-                            category,
-                            sizes,
-                            about_product,
-                            price,
-                            created_at
-                        }
-                    ]
-                }
-            */
-
             const product = result.data?.[0];
-
 
             if (!product) {
                 throw new Error("Product not found");
             }
 
-
-            /*
-                Find the same product from the products
-                already fetched by the homepage.
-
-                This gives us:
-                - images
-                - colors
-                - image_id
-                - color_id
-            */
-
             const existingProduct = products.find(
                 (item) => item.id === product.id
             );
-
-
-            /*
-                Combine API detail data with the already
-                available image/color information.
-            */
 
             const completeProduct = {
                 ...product,
@@ -223,7 +182,6 @@ export const ProductProvider = ({ children }) => {
                     existingProduct?.color_id || product.color,
             };
 
-
             setProductDetail(completeProduct);
 
             return {
@@ -231,14 +189,12 @@ export const ProductProvider = ({ children }) => {
                 data: completeProduct,
             };
 
-
         } catch (error) {
 
             console.error(
                 "Get product detail error:",
                 error.response?.data || error.message
             );
-
 
             return {
                 success: false,
@@ -248,21 +204,401 @@ export const ProductProvider = ({ children }) => {
                     "Failed to fetch product",
             };
 
-
         } finally {
 
             setProductDetailLoading(false);
-
         }
 
     }, [products]);
 
 
-    /*
-        =====================================================
-        INITIAL PRODUCTS REQUEST
-        =====================================================
-    */
+    // =====================================================
+    // GET PRODUCTS BY CATEGORY
+    // =====================================================
+
+    const getProductsByCategory = useCallback(
+        async (type, limit = 10) => {
+
+            try {
+
+                setLoading(true);
+
+                console.log(
+                    "Fetching category products:",
+                    type,
+                    limit
+                );
+
+                const response = await axios.get(
+                    "/api/products/v1/category",
+                    {
+                        params: {
+                            type,
+                            limit,
+                        },
+                    }
+                );
+
+                const result = response.data;
+
+                console.log(
+                    "Category products API response:",
+                    result
+                );
+
+                if (!result.success) {
+                    throw new Error(
+                        result.message ||
+                        "Failed to fetch category products"
+                    );
+                }
+
+                return {
+                    success: true,
+                    data: Array.isArray(result.data)
+                        ? result.data
+                        : [],
+                };
+
+            } catch (error) {
+
+                console.error(
+                    "Get category products error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+                return {
+                    success: false,
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to fetch category products",
+                    data: [],
+                };
+
+            } finally {
+
+                setLoading(false);
+            }
+
+        },
+        []
+    );
+
+
+    // =====================================================
+    // GET PRODUCTS BY FILTER
+    // =====================================================
+
+    const getProductsByFilter = useCallback(
+        async (type, limit = 10, price) => {
+
+            try {
+
+                console.log(
+                    "Fetching filtered products:",
+                    {
+                        type,
+                        limit,
+                        price,
+                    }
+                );
+
+                const response = await axios.get(
+                    "/api/products/v1/filter",
+                    {
+                        params: {
+                            type,
+                            limit,
+                            price,
+                        },
+                    }
+                );
+
+                const result = response.data;
+
+                console.log(
+                    "Filter products API response:",
+                    result
+                );
+
+                if (!result.success) {
+                    throw new Error(
+                        result.message ||
+                        "Failed to fetch filtered products"
+                    );
+                }
+
+                return {
+                    success: true,
+                    data: Array.isArray(result.data)
+                        ? result.data
+                        : [],
+                };
+
+            } catch (error) {
+
+                console.error(
+                    "Get filtered products error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+                return {
+                    success: false,
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to fetch filtered products",
+                    data: [],
+                };
+
+            }
+
+        },
+        []
+    );
+
+
+    // =====================================================
+    // GET CART
+    // =====================================================
+
+    // IMPORTANT:
+    // getCart MUST be declared BEFORE the useEffect
+    // that calls getCart().
+
+    const getCart = useCallback(async () => {
+
+        try {
+
+            setCartLoading(true);
+
+            const response = await axios.get(
+                "/api/carts/v1/cart"
+            );
+
+            const result = response.data;
+
+            if (!result.success) {
+                throw new Error(
+                    result.message ||
+                    "Failed to fetch cart"
+                );
+            }
+
+            const items = Array.isArray(result.data)
+                ? result.data
+                : [];
+
+            setCartItems(items);
+
+            return {
+                success: true,
+                data: items,
+            };
+
+        } catch (error) {
+
+            console.error(
+                "Get cart error:",
+                error.response?.data ||
+                error.message
+            );
+
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Failed to fetch cart",
+                data: [],
+            };
+
+        } finally {
+
+            setCartLoading(false);
+        }
+
+    }, []);
+
+
+    // =====================================================
+    // ADD TO CART
+    // =====================================================
+
+    const addToCart = useCallback(
+        async (productId, counts = 1) => {
+
+            try {
+
+                const response = await axios.post(
+                    `/api/carts/v1/cart?productId=${productId}`,
+                    {
+                        counts,
+                    }
+                );
+
+                const result = response.data;
+
+                if (!result.success) {
+                    throw new Error(
+                        result.message ||
+                        "Failed to add product to cart"
+                    );
+                }
+
+                // Refresh cart from DB
+                await getCart();
+
+                return {
+                    success: true,
+                    data: result.result,
+                    message: result.message,
+                };
+
+            } catch (error) {
+
+                console.error(
+                    "Add to cart error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+                return {
+                    success: false,
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to add product to cart",
+                };
+            }
+
+        },
+        [getCart]
+    );
+
+
+    // =====================================================
+    // REMOVE FROM CART
+    // =====================================================
+
+    const removeFromCart = useCallback(
+        async (productId) => {
+
+            try {
+
+                const response = await axios.delete(
+                    `/api/carts/v1/cart?productId=${productId}`
+                );
+
+                const result = response.data;
+
+                if (!result.success) {
+                    throw new Error(
+                        result.message ||
+                        "Failed to remove product"
+                    );
+                }
+
+                // Refresh cart from DB
+                await getCart();
+
+                return {
+                    success: true,
+                    message: result.message,
+                };
+
+            } catch (error) {
+
+                console.error(
+                    "Remove cart item error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+                return {
+                    success: false,
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to remove product",
+                };
+            }
+
+        },
+        [getCart]
+    );
+
+
+    // =====================================================
+    // UPDATE CART COUNT
+    // =====================================================
+
+    const updateCartCount = useCallback(
+        async (productId, counts) => {
+
+            try {
+
+                // If quantity becomes 0,
+                // remove the product completely.
+                if (counts <= 0) {
+
+                    return await removeFromCart(
+                        productId
+                    );
+                }
+
+                const response = await axios.put(
+                    `/api/carts/v1/cart?productId=${productId}`,
+                    {
+                        counts,
+                    }
+                );
+
+                const result = response.data;
+
+                if (!result.success) {
+                    throw new Error(
+                        result.message ||
+                        "Failed to update cart quantity"
+                    );
+                }
+
+                // Refresh cart from DB
+                await getCart();
+
+                return {
+                    success: true,
+                    data: result.result,
+                };
+
+            } catch (error) {
+
+                console.error(
+                    "Update cart count error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+                return {
+                    success: false,
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to update cart quantity",
+                };
+            }
+
+        },
+        [getCart, removeFromCart]
+    );
+
+
+    // =====================================================
+    // INITIAL PRODUCTS REQUEST
+    // =====================================================
 
     useEffect(() => {
 
@@ -277,11 +613,23 @@ export const ProductProvider = ({ children }) => {
     }, [getProducts]);
 
 
-    /*
-        =====================================================
-        LOAD MORE PRODUCTS
-        =====================================================
-    */
+    // =====================================================
+    // INITIAL CART REQUEST
+    // =====================================================
+
+    // NOW getCart has already been initialized,
+    // so this is safe.
+
+    useEffect(() => {
+
+        getCart();
+
+    }, [getCart]);
+
+
+    // =====================================================
+    // LOAD MORE PRODUCTS
+    // =====================================================
 
     const loadMoreProducts = useCallback(() => {
 
@@ -304,171 +652,28 @@ export const ProductProvider = ({ children }) => {
         hasNextPage,
         getProducts,
     ]);
-    const getProductsByCategory = useCallback(
-        async (type, limit = 10) => {
-
-            try {
-
-                setLoading(true);
-
-                console.log(
-                    "Fetching category products:",
-                    type,
-                    limit
-                );
 
 
-                const response = await axios.get(
-                    "/api/products/v1/category",
-                    {
-                        params: {
-                            type,
-                            limit,
-                        },
-                    }
-                );
+    // =====================================================
+    // CART COUNT
+    // =====================================================
 
-
-                const result = response.data;
-
-
-                console.log(
-                    "Category products API response:",
-                    result
-                );
-
-
-                if (!result.success) {
-
-                    throw new Error(
-                        result.message ||
-                        "Failed to fetch category products"
-                    );
-
-                }
-
-
-                return {
-                    success: true,
-                    data: Array.isArray(result.data)
-                        ? result.data
-                        : [],
-                };
-
-
-            } catch (error) {
-
-                console.error(
-                    "Get category products error:",
-                    error.response?.data ||
-                    error.message
-                );
-
-
-                return {
-                    success: false,
-                    message:
-                        error.response?.data?.message ||
-                        error.message ||
-                        "Failed to fetch category products",
-                    data: [],
-                };
-
-
-            } finally {
-
-                setLoading(false);
-
-            }
-
-        },
-        []
-    );
-    const getProductsByFilter = useCallback(
-        async (type, limit = 10, price) => {
-
-            try {
-
-                console.log(
-                    "Fetching filtered products:",
-                    {
-                        type,
-                        limit,
-                        price,
-                    }
-                );
-
-
-                const response = await axios.get(
-                    "/api/products/v1/filter",
-                    {
-                        params: {
-                            type,
-                            limit,
-                            price,
-                        },
-                    }
-                );
-
-
-                const result = response.data;
-
-
-                console.log(
-                    "Filter products API response:",
-                    result
-                );
-
-
-                if (!result.success) {
-
-                    throw new Error(
-                        result.message ||
-                        "Failed to fetch filtered products"
-                    );
-
-                }
-
-
-                return {
-                    success: true,
-
-                    data: Array.isArray(result.data)
-                        ? result.data
-                        : [],
-                };
-
-
-            } catch (error) {
-
-                console.error(
-                    "Get filtered products error:",
-                    error.response?.data ||
-                    error.message
-                );
-
-
-                return {
-                    success: false,
-
-                    message:
-                        error.response?.data?.message ||
-                        error.message ||
-                        "Failed to fetch filtered products",
-
-                    data: [],
-                };
-
-            }
-
-        },
-        []
+    const cartCount = cartItems.reduce(
+        (total, item) =>
+            total + Number(item.counts),
+        0
     );
 
+
+    // =====================================================
+    // PROVIDER
+    // =====================================================
 
     return (
         <ProductContext.Provider
             value={{
+
+                // Products
                 products,
                 loading,
                 hasNextPage,
@@ -478,8 +683,21 @@ export const ProductProvider = ({ children }) => {
                 productDetail,
                 productDetailLoading,
                 getProductById,
+
+                // Category / filter
                 getProductsByCategory,
                 getProductsByFilter,
+
+                // Cart
+                cartItems,
+                cartCount,
+                cartLoading,
+
+                getCart,
+                addToCart,
+                updateCartCount,
+                removeFromCart,
+
             }}
         >
             {children}

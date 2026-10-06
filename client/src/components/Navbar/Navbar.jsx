@@ -2,10 +2,15 @@ import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import data from "../../features/Home/Data/ProductData";
 import { Link,useNavigate  } from "react-router-dom";
+import { useContext } from "react";
+import { ProductContext } from "../../contexts/ProductContext";
 
 const Navbar = ({products=[],show=true,filter}) => {
   const [search, setSearch] = useState("");
   const allProducts = data.flatMap(category => category.products);
+  const {
+    cartCount
+} = useContext(ProductContext);
   const navigate = useNavigate();
   const searchableProducts = filter
   ? allProducts.filter(product => {
@@ -90,7 +95,7 @@ const Navbar = ({products=[],show=true,filter}) => {
             </svg>
 
             <span className="badge badge-sm indicator-item border-none ">
-              8
+              {cartCount}
             </span>
           </div></Link>
         </div>
