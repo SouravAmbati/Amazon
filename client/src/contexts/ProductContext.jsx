@@ -668,18 +668,28 @@ export const ProductProvider = ({ children }) => {
     // =====================================================
 
     const addOrder = useCallback(
-        async (productId) => {
+        async (
+            productId,
+            paymentMethod,
+            amount
+        ) => {
 
             try {
 
-                const response = await axios.post(
-                    "/api/orders/v1/order",
-                    {
-                        productId
-                    }
-                );
+                const response =
+                    await axios.post(
+                        "/api/orders/v1/order",
+                        {
+                            productId,
+                            paymentMethod,
+                            amount
+                        }
+                    );
 
-                const result = response.data;
+
+                const result =
+                    response.data;
+
 
                 if (!result.success) {
 
@@ -690,11 +700,30 @@ export const ProductProvider = ({ children }) => {
 
                 }
 
+
                 return {
+
                     success: true,
+
                     data: result.result,
-                    message: result.message
+
+                    orderId:
+                        result.orderId,
+
+                    url:
+                        result.url,
+
+                    sessionId:
+                        result.sessionId,
+
+                    paymentMethod:
+                        result.paymentMethod,
+
+                    message:
+                        result.message
+
                 };
+
 
             } catch (error) {
 
@@ -704,12 +733,16 @@ export const ProductProvider = ({ children }) => {
                     error.message
                 );
 
+
                 return {
+
                     success: false,
+
                     message:
                         error.response?.data?.message ||
                         error.message ||
                         "Failed to place order"
+
                 };
 
             }
