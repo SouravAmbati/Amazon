@@ -7,6 +7,8 @@ import Footer from './features/Home/Components/Footer/Footer.jsx'
 import CartPage from './pages/Cart/CartPage.jsx'
 import CheckoutPage from './pages/Checkout/CheckoutPage.jsx'
 import SpecificCategoryProductPage from './pages/ProductDetail/SpecificCategoryProduct.jsx'
+import PaymentSuccess from './features/Payment/components/PaymentSuccess.jsx'
+import PaymentCancelled from './features/Payment/components/PaymentCancel.jsx'
 
 const App = () => {
   return (
@@ -26,6 +28,12 @@ const App = () => {
         </DesktopOnly>} />
         <Route path="/product" element={<DesktopOnly>
           <SpecificCategoryProductPage />
+        </DesktopOnly>} />
+         <Route path="/payment-success" element={<DesktopOnly>
+          <PaymentSuccess />
+        </DesktopOnly>} />
+        <Route path="/payment-cancelled" element={<DesktopOnly>
+          <PaymentCancelled />
         </DesktopOnly>} />
       </Routes>
       <Footer/>
