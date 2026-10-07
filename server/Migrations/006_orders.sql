@@ -1,0 +1,5 @@
+CREATE TABLE orders(
+    id UUID PRIMARY KEY,
+    product UUID REFERENCES product(id),
+    created_At  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

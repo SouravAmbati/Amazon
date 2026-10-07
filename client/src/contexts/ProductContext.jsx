@@ -663,6 +663,116 @@ export const ProductProvider = ({ children }) => {
             total + Number(item.counts),
         0
     );
+    // =====================================================
+    // ADD ORDER
+    // =====================================================
+
+    const addOrder = useCallback(
+        async (productId) => {
+
+            try {
+
+                const response = await axios.post(
+                    "/api/orders/v1/order",
+                    {
+                        productId
+                    }
+                );
+
+                const result = response.data;
+
+                if (!result.success) {
+
+                    throw new Error(
+                        result.message ||
+                        "Failed to place order"
+                    );
+
+                }
+
+                return {
+                    success: true,
+                    data: result.result,
+                    message: result.message
+                };
+
+            } catch (error) {
+
+                console.error(
+                    "Add order error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+                return {
+                    success: false,
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to place order"
+                };
+
+            }
+
+        },
+        []
+    );
+    // =====================================================
+    // GET ORDERS
+    // =====================================================
+
+    const getOrders = useCallback(
+        async () => {
+
+            try {
+
+                const response = await axios.get(
+                    "/api/orders/v1/orders"
+                );
+
+                const result = response.data;
+
+                if (!result.success) {
+
+                    throw new Error(
+                        result.message ||
+                        "Failed to fetch orders"
+                    );
+
+                }
+
+                return {
+                    success: true,
+
+                    data: Array.isArray(result.data)
+                        ? result.data
+                        : []
+                };
+
+            } catch (error) {
+
+                console.error(
+                    "Get orders error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+                return {
+                    success: false,
+
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to fetch orders",
+
+                    data: []
+                };
+
+            }
+
+        },
+        []
+    );
 
 
     // =====================================================
@@ -697,6 +807,9 @@ export const ProductProvider = ({ children }) => {
                 addToCart,
                 updateCartCount,
                 removeFromCart,
+
+                addOrder,
+                getOrders,
 
             }}
         >

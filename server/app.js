@@ -6,6 +6,7 @@ import cors from "cors";
 import AuthRouter from "./src/Modules/AdminProducts/AdminAuthentication/AdminAuthRoutes/v1/AdminAuthRoute.js";
 import ProductRouter from "./src/Modules/ClientProducts/ClientRoutes/v1/ProductRoute.js";
 import CartRouter from "./src/Modules/carts/cartRoutes/v1/cartRoute.js";
+import OrderRouter from "./src/Modules/orders/orderRoutes/v1/orderRoutes.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/api/product/v1", UploadRouter);
 app.use("/api/auth/v1", AuthRouter);
 app.use("/api/products/v1", ProductRouter);
 app.use("/api/carts/v1", CartRouter);
+app.use("/api/orders/v1", OrderRouter);
 
 app.listen(port, () => {
   console.log(`listening on port ${port}`);
