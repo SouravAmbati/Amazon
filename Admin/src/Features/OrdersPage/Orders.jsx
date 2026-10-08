@@ -118,7 +118,7 @@ const Orders = () => {
 
                     // Your current orders table
                     // does not have quantity yet.
-                    quantity: 1,
+                    quantity: order.quantity,
 
                     totalPrice:
                         Number(order.price),

@@ -9,6 +9,8 @@ import CheckoutPage from './pages/Checkout/CheckoutPage.jsx'
 import SpecificCategoryProductPage from './pages/ProductDetail/SpecificCategoryProduct.jsx'
 import PaymentSuccess from './features/Payment/components/PaymentSuccess.jsx'
 import PaymentCancelled from './features/Payment/components/PaymentCancel.jsx'
+import OrderView from './features/Payment/components/OrderView.jsx'
+import Orders from './features/Payment/components/Orders.jsx'
 
 const App = () => {
   return (
@@ -34,6 +36,12 @@ const App = () => {
         </DesktopOnly>} />
         <Route path="/payment-cancelled" element={<DesktopOnly>
           <PaymentCancelled />
+        </DesktopOnly>} />
+         <Route path="/order/:orderId" element={<DesktopOnly>
+          <OrderView />
+        </DesktopOnly>} />
+        <Route path="/orders" element={<DesktopOnly>
+          <Orders />
         </DesktopOnly>} />
       </Routes>
       <Footer/>

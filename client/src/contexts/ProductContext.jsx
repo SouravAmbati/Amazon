@@ -670,6 +670,7 @@ export const ProductProvider = ({ children }) => {
     const addOrder = useCallback(
         async (
             productId,
+            quantity,
             paymentMethod,
             amount
         ) => {
@@ -681,6 +682,7 @@ export const ProductProvider = ({ children }) => {
                         "/api/orders/v1/order",
                         {
                             productId,
+                            quantity,
                             paymentMethod,
                             amount
                         }
@@ -806,6 +808,155 @@ export const ProductProvider = ({ children }) => {
         },
         []
     );
+    // =====================================================
+    // GET SINGLE ORDER STATUS
+    // =====================================================
+
+    const getOrderStatus = useCallback(
+        async (orderId) => {
+
+            try {
+
+                const response =
+                    await axios.get(
+                        "/api/orders/v1/order/status",
+                        {
+                            params: {
+                                orderId
+                            }
+                        }
+                    );
+
+
+                const result =
+                    response.data;
+
+
+                if (!result.success) {
+
+                    throw new Error(
+                        result.message ||
+                        "Failed to fetch order status"
+                    );
+
+                }
+
+
+                return {
+                    success: true,
+                    data: result.data
+                };
+
+
+            } catch (error) {
+
+                console.error(
+                    "Get order status error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+
+                return {
+                    success: false,
+
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to fetch order status"
+                };
+            }
+        },
+        []
+    );
+
+    // =====================================================
+    // SEARCH PRODUCTS
+    // =====================================================
+
+    const searchProducts = useCallback(
+        async (
+            query,
+            limit = 10,
+            category = null
+        ) => {
+
+            try {
+
+                if (!query || !query.trim()) {
+
+                    return {
+                        success: true,
+                        data: []
+                    };
+                }
+
+
+                const response =
+                    await axios.get(
+                        "/api/products/v1/search",
+                        {
+                            params: {
+                                query: query.trim(),
+                                limit,
+                                ...(category
+                                    ? { category }
+                                    : {})
+                            }
+                        }
+                    );
+
+
+                const result =
+                    response.data;
+
+
+                if (!result.success) {
+
+                    throw new Error(
+                        result.message ||
+                        "Failed to search products"
+                    );
+
+                }
+
+
+                return {
+                    success: true,
+
+                    data:
+                        Array.isArray(
+                            result.data
+                        )
+                            ? result.data
+                            : []
+                };
+
+
+            } catch (error) {
+
+                console.error(
+                    "Search products error:",
+                    error.response?.data ||
+                    error.message
+                );
+
+
+                return {
+                    success: false,
+
+                    message:
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Failed to search products",
+
+                    data: []
+                };
+            }
+
+        },
+        []
+    );
 
 
     // =====================================================
@@ -843,6 +994,9 @@ export const ProductProvider = ({ children }) => {
 
                 addOrder,
                 getOrders,
+                getOrderStatus,
+
+                searchProducts
 
             }}
         >

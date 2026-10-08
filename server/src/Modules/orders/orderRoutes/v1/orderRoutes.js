@@ -1,5 +1,5 @@
 import express from "express";
-import { addOrderController, getOrdersController, updateOrderStatusController } from "../../orderController.js";
+import { addOrderController, getOrdersController, getOrderStatusController, updateOrderStatusController } from "../../orderController.js";
 
 
 
@@ -20,6 +20,11 @@ OrderRouter.get(
 OrderRouter.patch(
     "/order/status",
     updateOrderStatusController
+);
+
+OrderRouter.get(
+    "/order/status",
+    getOrderStatusController
 );
 
 export default OrderRouter;

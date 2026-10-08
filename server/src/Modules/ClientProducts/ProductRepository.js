@@ -208,3 +208,89 @@ export async function getProductByFilterRepository(
     }
 
 }
+export async function searchProductsRepository(
+    query,
+    limit = 10,
+    category = null
+) {
+    const client = await pool.connect();
+
+    try {
+
+        let result;
+
+        if (category) {
+
+            result = await client.query(
+                `
+                SELECT
+                    p.id,
+                    p.product_name,
+                    p.category,
+                    p.price,
+                    i.image_url AS images
+
+                FROM product p
+
+                INNER JOIN images i
+                    ON p.img = i.id
+
+                WHERE
+                    p.product_name ILIKE $1
+                    AND p.category = $2
+
+                ORDER BY
+                    p.product_name ASC
+
+                LIMIT $3
+                `,
+                [
+                    `%${query}%`,
+                    category,
+                    limit
+                ]
+            );
+
+        } else {
+
+            result = await client.query(
+                `
+                SELECT
+                    p.id,
+                    p.product_name,
+                    p.category,
+                    p.price,
+                    i.image_url AS images
+
+                FROM product p
+
+                INNER JOIN images i
+                    ON p.img = i.id
+
+                WHERE
+                    p.product_name ILIKE $1
+
+                ORDER BY
+                    p.product_name ASC
+
+                LIMIT $2
+                `,
+                [
+                    `%${query}%`,
+                    limit
+                ]
+            );
+        }
+
+
+        return {
+            success: true,
+            data: result.rows
+        };
+
+    } finally {
+
+        client.release();
+
+    }
+}
