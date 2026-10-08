@@ -57,3 +57,49 @@ export async function getOrdersRepository() {
         client.release();
     }
 }
+const ALLOWED_ORDER_STATUSES = [
+    "processing",
+    "confirmed",
+    "shipped",
+    "out_for_delivery",
+    "delivered",
+    "cancelled",
+];
+export async function updateOrderStatusRepository(
+    orderId,
+    status
+) {
+    const client = await pool.connect();
+
+    try {
+        if (!ALLOWED_ORDER_STATUSES.includes(status)) {
+            throw new Error("Invalid order status");
+        }
+
+        const result = await client.query(
+            `
+            UPDATE orders
+            SET status = $1
+            WHERE id = $2
+            RETURNING
+                id,
+                product,
+                status,
+                created_at
+            `,
+            [status, orderId]
+        );
+
+        if (result.rowCount === 0) {
+            throw new Error("Order not found");
+        }
+
+        return {
+            success: true,
+            message: "Order status updated successfully",
+            result: result.rows[0],
+        };
+    } finally {
+        client.release();
+    }
+}
