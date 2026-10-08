@@ -102,6 +102,7 @@ const CheckOut = () => {
           const response =
             await addOrder(
               item.product_id,
+              Number(item.counts),
               "stripe",
               itemAmount
             );
@@ -148,6 +149,7 @@ const CheckOut = () => {
           const response =
             await addOrder(
               item.product_id,
+              Number(item.counts),
               "cod",
               Number(item.price) *
               Number(item.counts)

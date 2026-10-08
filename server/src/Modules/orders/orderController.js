@@ -1,7 +1,9 @@
 import { Payment } from "../../utils/StripePayment.js";
 import {
     addOrderService,
-    getOrdersService
+    getOrdersService,
+    getOrderStatusService,
+    updateOrderStatusService
 } from "./orderService.js";
 
 
@@ -11,9 +13,18 @@ export const addOrderController = async (req, res) => {
 
         const {
             productId,
+            quantity,
             paymentMethod,
             amount
         } = req.body;
+        if (!quantity || Number(quantity) <= 0) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Quantity must be greater than 0"
+            });
+
+        }
 
 
         if (!productId) {
@@ -49,7 +60,7 @@ export const addOrderController = async (req, res) => {
 
             // Create order first
             const order =
-                await addOrderService(productId);
+                await addOrderService(productId,quantity);
 
 
             if (!order.success) {
@@ -98,7 +109,8 @@ export const addOrderController = async (req, res) => {
 
             const response =
                 await addOrderService(
-                    productId
+                    productId,
+                    quantity
                 );
 
 
@@ -155,6 +167,111 @@ export const getOrdersController = async (req, res) => {
     } catch (error) {
 
         return res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+export const updateOrderStatusController = async (
+    req,
+    res
+) => {
+    try {
+        const { orderId, status } = req.body;
+
+        if (!orderId) {
+            return res.status(400).json({
+                success: false,
+                message: "Order ID is required",
+            });
+        }
+
+        if (!status) {
+            return res.status(400).json({
+                success: false,
+                message: "Order status is required",
+            });
+        }
+
+        const response =
+            await updateOrderStatusService(
+                orderId,
+                status
+            );
+
+        return res.status(200).json(response);
+
+    } catch (error) {
+        console.error(
+            "Update order status error:",
+            error
+        );
+
+        if (error.message === "Order not found") {
+            return res.status(404).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        if (error.message === "Invalid order status") {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+export const getOrderStatusController = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const { orderId } = req.query;
+
+        if (!orderId) {
+            return res.status(400).json({
+                success: false,
+                message: "Order ID is required"
+            });
+        }
+
+        const response =
+            await getOrderStatusService(
+                orderId
+            );
+
+        return res.status(200).json(
+            response
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Get order status error:",
+            error
+        );
+
+        if (
+            error.message ===
+            "Order not found"
+        ) {
+
+            return res.status(404).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        return res.status(500).json({
             success: false,
             message: error.message
         });

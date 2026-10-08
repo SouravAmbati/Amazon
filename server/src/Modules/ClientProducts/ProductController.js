@@ -1,5 +1,5 @@
 import { cursorSchema } from "../AdminProducts/AdminValidators/cursorValidator.js";
-import { getProductByCategoryService, getProductByFilterService, getProductByIdService, getProductService } from "./ProductService.js"
+import { getProductByCategoryService, getProductByFilterService, getProductByIdService, getProductService, searchProductsService } from "./ProductService.js"
 
 
 export const getProductController = async(req,res)=>{
@@ -123,4 +123,59 @@ export const getProductsByFilterController = async (req, res) => {
 
     }
 
+};
+export const searchProductsController = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            query,
+            limit = 10,
+            category
+        } = req.query;
+
+
+        if (!query || !query.trim()) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Search query is required"
+            });
+
+        }
+
+
+        const response =
+            await searchProductsService(
+                query,
+                limit,
+                category || null
+            );
+
+
+        return res.status(200).json(
+            response
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Search products error:",
+            error
+        );
+
+
+        return res.status(500).json({
+            success: false,
+            message:
+                error.message ||
+                "Failed to search products"
+        });
+
+    }
 };

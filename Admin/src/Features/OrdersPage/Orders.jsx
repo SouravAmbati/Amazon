@@ -1,167 +1,413 @@
-import React, { useState } from "react";
+import React, {
+    useContext,
+    useEffect,
+    useState
+} from "react";
+
 import {
     PackageCheck,
     Trash2
 } from "lucide-react";
+import { ProductContext } from "../../context/ProductContext.jsx";
+
+
 
 const Orders = () => {
 
-    const [orders, setOrders] = useState([
-        {
-            id: 1,
-            productName: "Apple iPhone 15 Pro Max",
-            productImage:
-                "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=200",
-            customerName: "Sourav Ambati",
-            quantity: 1,
-            totalPrice: 159900,
-            status: "Processing"
-        },
-        {
-            id: 2,
-            productName: "Sony WH-1000XM5 Wireless Headphones",
-            productImage:
-                "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200",
-            customerName: "Rahul Sharma",
-            quantity: 2,
-            totalPrice: 59980,
-            status: "Confirmed"
-        },
-        {
-            id: 3,
-            productName: "Apple MacBook Air M3",
-            productImage:
-                "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200",
-            customerName: "Priya Verma",
-            quantity: 1,
-            totalPrice: 114900,
-            status: "Shipped"
-        },
-        {
-            id: 4,
-            productName: "Apple Watch Series 9",
-            productImage:
-                "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=200",
-            customerName: "Amit Patel",
-            quantity: 1,
-            totalPrice: 41900,
-            status: "Delivered"
-        }
-    ]);
+    // --------------------------------------------------
+    // PRODUCT CONTEXT
+    // --------------------------------------------------
 
-    const [selectedOrders, setSelectedOrders] = useState([]);
+    const {
+        GetOrders,
+        UpdateOrderStatus
+    } = useContext(ProductContext);
 
+
+    // --------------------------------------------------
+    // ORDERS
+    // --------------------------------------------------
+
+    const [orders, setOrders] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+
+
+    // --------------------------------------------------
+    // SELECTED ORDERS
+    // --------------------------------------------------
+
+    const [selectedOrders, setSelectedOrders] =
+        useState([]);
+
+
+    // --------------------------------------------------
+    // ORDER STATUSES
+    // --------------------------------------------------
 
     const orderStatuses = [
-        "Processing",
-        "Confirmed",
-        "Shipped",
-        "Out for Delivery",
-        "Delivered",
-        "Cancelled"
+        {
+            value: "processing",
+            label: "Processing"
+        },
+        {
+            value: "confirmed",
+            label: "Confirmed"
+        },
+        {
+            value: "shipped",
+            label: "Shipped"
+        },
+        {
+            value: "out_for_delivery",
+            label: "Out for Delivery"
+        },
+        {
+            value: "delivered",
+            label: "Delivered"
+        },
+        {
+            value: "cancelled",
+            label: "Cancelled"
+        }
     ];
 
 
-    const handleStatusChange = (orderId, newStatus) => {
+    // --------------------------------------------------
+    // GET ORDERS
+    // --------------------------------------------------
 
-        setOrders((previousOrders) =>
-            previousOrders.map((order) =>
-                order.id === orderId
-                    ? {
-                        ...order,
-                        status: newStatus
-                    }
-                    : order
-            )
-        );
+    const fetchOrders = async () => {
 
+        try {
+
+            setLoading(true);
+
+            const response =
+                await GetOrders();
+
+
+            if (!response.success) {
+                throw new Error(
+                    response.message ||
+                    "Failed to fetch orders"
+                );
+            }
+
+
+            const formattedOrders =
+                response.data.map((order) => ({
+
+                    id: order.order_id,
+
+                    productId:
+                        order.product_id,
+
+                    productName:
+                        order.product_name,
+
+                    productImage:
+                        Array.isArray(order.images)
+                            ? order.images[0]
+                            : order.images,
+
+                    // Your current DB schema
+                    // does not have customer data yet.
+                    customerName:
+                        "Customer",
+
+                    // Your current orders table
+                    // does not have quantity yet.
+                    quantity: order.quantity,
+
+                    totalPrice:
+                        Number(order.price),
+
+                    status:
+                        order.order_status ||
+                        "processing",
+
+                    createdAt:
+                        order.created_at
+                }));
+
+
+            setOrders(formattedOrders);
+
+
+        } catch (error) {
+
+            console.error(
+                "Fetch orders error:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "Failed to fetch orders"
+            );
+
+        } finally {
+
+            setLoading(false);
+        }
     };
 
 
-    const handleSelectOrder = (orderId) => {
+    // --------------------------------------------------
+    // LOAD ORDERS
+    // --------------------------------------------------
 
-        setSelectedOrders((previousSelectedOrders) => {
+    useEffect(() => {
 
-            if (previousSelectedOrders.includes(orderId)) {
+        fetchOrders();
 
-                return previousSelectedOrders.filter(
-                    (id) => id !== orderId
+    }, []);
+
+
+    // --------------------------------------------------
+    // UPDATE ORDER STATUS
+    // --------------------------------------------------
+
+    const handleStatusChange = async (
+        orderId,
+        newStatus
+    ) => {
+
+        try {
+
+            const response =
+                await UpdateOrderStatus(
+                    orderId,
+                    newStatus
+                );
+
+
+            if (!response.success) {
+
+                throw new Error(
+                    response.message ||
+                    "Failed to update order status"
                 );
 
             }
 
-            return [
-                ...previousSelectedOrders,
-                orderId
-            ];
 
-        });
+            // Update local UI after
+            // database update succeeds
 
+            setOrders((previousOrders) =>
+                previousOrders.map(
+                    (order) =>
+                        order.id === orderId
+                            ? {
+                                ...order,
+                                status: newStatus
+                            }
+                            : order
+                )
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Order status update error:",
+                error
+            );
+
+
+            alert(
+                error.message ||
+                "Failed to update order status"
+            );
+        }
     };
 
 
+    // --------------------------------------------------
+    // SELECT ORDER
+    // --------------------------------------------------
+
+    const handleSelectOrder = (orderId) => {
+
+        setSelectedOrders(
+            (previousSelectedOrders) => {
+
+                if (
+                    previousSelectedOrders.includes(
+                        orderId
+                    )
+                ) {
+
+                    return previousSelectedOrders.filter(
+                        (id) =>
+                            id !== orderId
+                    );
+
+                }
+
+
+                return [
+                    ...previousSelectedOrders,
+                    orderId
+                ];
+            }
+        );
+    };
+
+
+    // --------------------------------------------------
+    // SELECT ALL
+    // --------------------------------------------------
+
     const handleSelectAll = () => {
 
-        if (selectedOrders.length === orders.length) {
+        if (
+            selectedOrders.length ===
+            orders.length
+        ) {
 
             setSelectedOrders([]);
 
         } else {
 
             setSelectedOrders(
-                orders.map((order) => order.id)
+                orders.map(
+                    (order) => order.id
+                )
             );
-
         }
-
     };
 
+
+    // --------------------------------------------------
+    // DELETE SELECTED
+    // --------------------------------------------------
 
     const handleDeleteSelected = () => {
 
-        setOrders((previousOrders) =>
-            previousOrders.filter(
-                (order) =>
-                    !selectedOrders.includes(order.id)
-            )
+        setOrders(
+            (previousOrders) =>
+                previousOrders.filter(
+                    (order) =>
+                        !selectedOrders.includes(
+                            order.id
+                        )
+                )
         );
 
-        setSelectedOrders([]);
 
+        setSelectedOrders([]);
     };
 
+
+    // --------------------------------------------------
+    // STATUS STYLE
+    // --------------------------------------------------
 
     const getStatusStyle = (status) => {
 
         switch (status) {
 
-            case "Processing":
-                return "bg-yellow-50 text-yellow-700 border-yellow-200";
+            case "processing":
 
-            case "Confirmed":
-                return "bg-blue-50 text-blue-700 border-blue-200";
+                return (
+                    "bg-yellow-50 " +
+                    "text-yellow-700 " +
+                    "border-yellow-200"
+                );
 
-            case "Shipped":
-                return "bg-purple-50 text-purple-700 border-purple-200";
 
-            case "Out for Delivery":
-                return "bg-orange-50 text-orange-700 border-orange-200";
+            case "confirmed":
 
-            case "Delivered":
-                return "bg-green-50 text-green-700 border-green-200";
+                return (
+                    "bg-blue-50 " +
+                    "text-blue-700 " +
+                    "border-blue-200"
+                );
 
-            case "Cancelled":
-                return "bg-red-50 text-red-700 border-red-200";
+
+            case "shipped":
+
+                return (
+                    "bg-purple-50 " +
+                    "text-purple-700 " +
+                    "border-purple-200"
+                );
+
+
+            case "out_for_delivery":
+
+                return (
+                    "bg-orange-50 " +
+                    "text-orange-700 " +
+                    "border-orange-200"
+                );
+
+
+            case "delivered":
+
+                return (
+                    "bg-green-50 " +
+                    "text-green-700 " +
+                    "border-green-200"
+                );
+
+
+            case "cancelled":
+
+                return (
+                    "bg-red-50 " +
+                    "text-red-700 " +
+                    "border-red-200"
+                );
+
 
             default:
-                return "bg-gray-50 text-gray-700 border-gray-200";
 
+                return (
+                    "bg-gray-50 " +
+                    "text-gray-700 " +
+                    "border-gray-200"
+                );
         }
-
     };
 
 
+    // --------------------------------------------------
+    // LOADING
+    // --------------------------------------------------
+
+    if (loading) {
+
+        return (
+            <div
+                className="
+                    min-h-screen
+                    bg-gray-50
+                    p-8
+                    flex
+                    items-center
+                    justify-center
+                "
+            >
+
+                <div className="text-gray-500">
+                    Loading orders...
+                </div>
+
+            </div>
+        );
+    }
+
+
+    // --------------------------------------------------
+    // UI
+    // --------------------------------------------------
+
     return (
+
         <div className="min-h-screen bg-gray-50 p-8">
 
             {/* PAGE HEADER */}
@@ -208,7 +454,12 @@ const Orders = () => {
                         <span className="text-sm font-medium text-red-700">
 
                             {selectedOrders.length} order
-                            {selectedOrders.length > 1 && "s"} selected
+
+                            {selectedOrders.length > 1 &&
+                                "s"
+                            }
+
+                            {" "}selected
 
                         </span>
 
@@ -217,7 +468,9 @@ const Orders = () => {
 
                     <button
                         type="button"
-                        onClick={handleDeleteSelected}
+                        onClick={
+                            handleDeleteSelected
+                        }
                         className="
                             flex
                             items-center
@@ -264,7 +517,13 @@ const Orders = () => {
 
                         {/* TABLE HEAD */}
 
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                        <thead
+                            className="
+                                bg-gray-50
+                                border-b
+                                border-gray-200
+                            "
+                        >
 
                             <tr>
 
@@ -275,9 +534,12 @@ const Orders = () => {
                                         className="checkbox checkbox-sm"
                                         checked={
                                             orders.length > 0 &&
-                                            selectedOrders.length === orders.length
+                                            selectedOrders.length ===
+                                                orders.length
                                         }
-                                        onChange={handleSelectAll}
+                                        onChange={
+                                            handleSelectAll
+                                        }
                                     />
 
                                 </th>
@@ -369,7 +631,12 @@ const Orders = () => {
 
                         {/* TABLE BODY */}
 
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody
+                            className="
+                                divide-y
+                                divide-gray-100
+                            "
+                        >
 
                             {orders.map((order) => (
 
@@ -379,7 +646,9 @@ const Orders = () => {
                                         transition
 
                                         ${
-                                            selectedOrders.includes(order.id)
+                                            selectedOrders.includes(
+                                                order.id
+                                            )
                                                 ? "bg-red-50"
                                                 : "hover:bg-gray-50"
                                         }
@@ -394,10 +663,14 @@ const Orders = () => {
                                             type="checkbox"
                                             className="checkbox checkbox-sm"
                                             checked={
-                                                selectedOrders.includes(order.id)
+                                                selectedOrders.includes(
+                                                    order.id
+                                                )
                                             }
                                             onChange={() =>
-                                                handleSelectOrder(order.id)
+                                                handleSelectOrder(
+                                                    order.id
+                                                )
                                             }
                                         />
 
@@ -424,8 +697,12 @@ const Orders = () => {
                                             >
 
                                                 <img
-                                                    src={order.productImage}
-                                                    alt={order.productName}
+                                                    src={
+                                                        order.productImage
+                                                    }
+                                                    alt={
+                                                        order.productName
+                                                    }
                                                     className="
                                                         w-full
                                                         h-full
@@ -446,11 +723,17 @@ const Orders = () => {
                                                         text-gray-900
                                                     "
                                                 >
-                                                    {order.productName}
+                                                    {
+                                                        order.productName
+                                                    }
                                                 </p>
 
+
                                                 <p className="text-xs text-gray-400 mt-1">
-                                                    Order #{order.id}
+
+                                                    Order #
+                                                    {order.id}
+
                                                 </p>
 
                                             </div>
@@ -465,7 +748,11 @@ const Orders = () => {
                                     <td className="px-6 py-5">
 
                                         <p className="text-sm font-medium text-gray-900">
-                                            {order.customerName}
+
+                                            {
+                                                order.customerName
+                                            }
+
                                         </p>
 
                                     </td>
@@ -476,7 +763,10 @@ const Orders = () => {
                                     <td className="px-6 py-5">
 
                                         <p className="text-sm text-gray-700">
-                                            Quantity: {order.quantity}
+
+                                            Quantity:{" "}
+                                            {order.quantity}
+
                                         </p>
 
                                     </td>
@@ -489,7 +779,9 @@ const Orders = () => {
                                         <p className="text-sm font-semibold text-gray-900">
 
                                             ₹
-                                            {order.totalPrice.toLocaleString(
+                                            {Number(
+                                                order.totalPrice
+                                            ).toLocaleString(
                                                 "en-IN"
                                             )}
 
@@ -503,7 +795,9 @@ const Orders = () => {
                                     <td className="px-6 py-5">
 
                                         <select
-                                            value={order.status}
+                                            value={
+                                                order.status
+                                            }
                                             onChange={(e) =>
                                                 handleStatusChange(
                                                     order.id,
@@ -522,20 +816,30 @@ const Orders = () => {
                                                 cursor-pointer
                                                 transition
 
-                                                ${getStatusStyle(order.status)}
+                                                ${getStatusStyle(
+                                                    order.status
+                                                )}
                                             `}
                                         >
 
-                                            {orderStatuses.map((status) => (
+                                            {orderStatuses.map(
+                                                (status) => (
 
-                                                <option
-                                                    key={status}
-                                                    value={status}
-                                                >
-                                                    {status}
-                                                </option>
+                                                    <option
+                                                        key={
+                                                            status.value
+                                                        }
+                                                        value={
+                                                            status.value
+                                                        }
+                                                    >
+                                                        {
+                                                            status.label
+                                                        }
+                                                    </option>
 
-                                            ))}
+                                                )
+                                            )}
 
                                         </select>
 
@@ -544,6 +848,28 @@ const Orders = () => {
                                 </tr>
 
                             ))}
+
+
+                            {/* NO ORDERS */}
+
+                            {orders.length === 0 && (
+
+                                <tr>
+
+                                    <td
+                                        colSpan="6"
+                                        className="
+                                            text-center
+                                            py-12
+                                            text-gray-500
+                                        "
+                                    >
+                                        No orders found
+                                    </td>
+
+                                </tr>
+
+                            )}
 
                         </tbody>
 
@@ -556,5 +882,6 @@ const Orders = () => {
         </div>
     );
 };
+
 
 export default Orders;
