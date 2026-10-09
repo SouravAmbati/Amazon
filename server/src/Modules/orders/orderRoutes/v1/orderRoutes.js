@@ -1,5 +1,7 @@
 import express from "express";
 import { addOrderController, getOrdersController, getOrderStatusController, updateOrderStatusController } from "../../orderController.js";
+import { authorize } from "../../../../middleware/authorize.js";
+import { getAllOrdersController } from "../../AdminOrderController.js";
 
 
 
@@ -14,6 +16,7 @@ OrderRouter.post(
 
 OrderRouter.get(
     "/orders",
+    authorize,
     getOrdersController
 );
 
@@ -25,6 +28,11 @@ OrderRouter.patch(
 OrderRouter.get(
     "/order/status",
     getOrderStatusController
+);
+
+OrderRouter.get(
+    "/admin-orders",
+    getAllOrdersController
 );
 
 export default OrderRouter;

@@ -477,30 +477,6 @@ const Orders = () => {
                                         "
                                     >
 
-                                        <div>
-
-                                            <p
-                                                className="
-                                                    text-xs
-                                                    text-gray-500
-                                                "
-                                            >
-                                                ORDER ID
-                                            </p>
-
-                                            <p
-                                                className="
-                                                    text-sm
-                                                    font-medium
-                                                    text-gray-800
-                                                    break-all
-                                                "
-                                            >
-                                                {order.order_id}
-                                            </p>
-
-                                        </div>
-
 
                                         <div>
 

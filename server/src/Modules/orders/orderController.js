@@ -17,6 +17,7 @@ export const addOrderController = async (req, res) => {
             paymentMethod,
             amount
         } = req.body;
+        const userId = req.user.id;
         if (!quantity || Number(quantity) <= 0) {
 
             return res.status(400).json({
@@ -60,7 +61,7 @@ export const addOrderController = async (req, res) => {
 
             // Create order first
             const order =
-                await addOrderService(productId,quantity);
+                await addOrderService(productId,quantity,userId);
 
 
             if (!order.success) {
@@ -110,7 +111,8 @@ export const addOrderController = async (req, res) => {
             const response =
                 await addOrderService(
                     productId,
-                    quantity
+                    quantity,
+                    userId
                 );
 
 
@@ -157,18 +159,13 @@ export const addOrderController = async (req, res) => {
 
 
 export const getOrdersController = async (req, res) => {
-
     try {
-
-        const response = await getOrdersService();
-
+        const response = await getOrdersService(req.user.id);
         return res.status(200).json(response);
-
     } catch (error) {
-
-        return res.status(400).json({
+        return res.status(500).json({
             success: false,
-            message: error.message
+            message: error.message,
         });
     }
 };

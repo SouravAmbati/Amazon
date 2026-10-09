@@ -10,7 +10,7 @@ import Orders from "./Features/OrdersPage/Orders";
 
 import { AuthProvider } from "./context/AuthContext";
 import Login from "./Features/Authentication/components/Login";
-import ProtectedRoute from "./Features/Authentication/components/ProtectedRoute";
+import ProtectedRoute from "./Features/Authentication/components/ProtectectedRoute.jsx";
 
 
 const Dashboard = () => {

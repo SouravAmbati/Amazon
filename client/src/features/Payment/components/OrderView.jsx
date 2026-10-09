@@ -317,7 +317,6 @@ const OrderView = () => {
                             mt-2
                         "
                     >
-                        Order ID: {order.order_id}
                     </p>
 
                 </div>

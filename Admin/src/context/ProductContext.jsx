@@ -496,7 +496,7 @@ const UpdateOrderStatus = async (
 const GetOrders = async () => {
     try {
         const response = await axios.get(
-            "/api/orders/v1/orders"
+            "/api/orders/v1/admin-orders"
         );
 
         const result = response.data;
