@@ -83,21 +83,52 @@ export async function getProductsRepository(cursor) {
     client.release();
   }
 }
-export async function getProductByIdRepository(productid){
-  const client = await pool.connect();
-  try {
-    const result=await client.query("SELECT * FROM product WHERE id=$1",[productid]);
-    const response = {
-      success: true,
-      data:result.rows,
-    };
-    return response
-  } catch (error) {
-    throw error
-  } finally{
-    client.release();
-  }
+
+
+export async function getProductByIdRepository(productid) {
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(
+            `
+            SELECT
+                p.id,
+                p.product_name,
+                p.category,
+                p.sizes,
+                p.about_product,
+                p.price,
+                p.created_at,
+                p.color AS color_id,
+                c.hashcode AS colors,
+                p.img AS image_id,
+                i.image_url AS images
+            FROM product p
+            LEFT JOIN colors c
+                ON p.color = c.id
+            LEFT JOIN images i
+                ON p.img = i.id
+            WHERE p.id = $1
+            `,
+            [productid]
+        );
+
+        return {
+            success: true,
+            data: result.rows.map((product) => ({
+                ...product,
+                images: product.images || [],
+                colors: product.colors ? [product.colors] : [],
+            })),
+        };
+    } catch (error) {
+        throw error;
+    } finally {
+        client.release();
+    }
 }
+
+
 export async function getProductsByCategoryRepository(type,limit){
   const client = await pool.connect();
   try {
