@@ -2,7 +2,6 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
 } from "react";
 
 import Navbar from "../../components/Navbar/Navbar.jsx";
@@ -12,9 +11,7 @@ import FloatingFilter from "../../features/Home/Components/Filters/Filter.jsx";
 
 import { ProductContext } from "../../contexts/ProductContext.jsx";
 
-
 const Home = () => {
-
   const {
     products,
     loading,
@@ -22,86 +19,61 @@ const Home = () => {
     loadMoreProducts,
   } = useContext(ProductContext);
 
-
   /*
-      Group API products into categories.
-
-      IMPORTANT:
-      We keep ALL fetched products here.
-
-      CategoryCard itself displays only 4.
-  */
+   * Group API products into categories.
+   * Each category card contains up to 4 products.
+   */
   const categories = useMemo(() => {
-
     const grouped = {};
 
     products.forEach((product) => {
+      if (!grouped[product.category]) {
+        grouped[product.category] = [];
+      }
 
-        if (!grouped[product.category]) {
-            grouped[product.category] = [];
-        }
+      const categoryCards = grouped[product.category];
 
-        const categoryCards = grouped[product.category];
+      let lastCard = categoryCards[categoryCards.length - 1];
 
-        let lastCard =
-            categoryCards[categoryCards.length - 1];
+      if (!lastCard || lastCard.products.length === 4) {
+        lastCard = {
+          id: `${product.category}-${categoryCards.length}-${product.id}`,
+          category: product.category,
+          products: [],
+        };
 
-        if (!lastCard || lastCard.products.length === 4) {
+        categoryCards.push(lastCard);
+      }
 
-            lastCard = {
-                id: `${product.category}-${categoryCards.length}-${product.id}`,
-                category: product.category,
-                products: [],
-            };
-
-            categoryCards.push(lastCard);
-        }
-
-        lastCard.products.push({
-            id: product.id,
-            name: product.product_name,
-            price: product.price,
-            images: product.images || [],
-        });
-
+      lastCard.products.push({
+        id: product.id,
+        name: product.product_name,
+        price: product.price,
+        images: product.images || [],
+      });
     });
 
     return Object.values(grouped).flat();
-
-}, [products]);
-
+  }, [products]);
 
   /*
-      Navbar search data
-  */
+   * Navbar search data.
+   */
   const productNames = useMemo(() => {
-
     return products.map((product) => ({
       id: product.id,
       name: product.product_name,
     }));
-
   }, [products]);
 
-
   /*
-      EAGER LOADING
-
-      The API will be called when the user comes
-      within 1000px of the bottom.
-
-      So we don't wait until the user actually
-      reaches the bottom.
-  */
+   * Infinite scrolling.
+   * Load more products when within 1000px
+   * of the bottom of the page.
+   */
   useEffect(() => {
-
     const handleScroll = () => {
-
-      if (loading) {
-        return;
-      }
-
-      if (!hasNextPage) {
+      if (loading || !hasNextPage) {
         return;
       }
 
@@ -111,116 +83,51 @@ const Home = () => {
       const pageHeight =
         document.documentElement.scrollHeight;
 
-
-      /*
-          Start loading when the user is
-          1000px away from the bottom.
-      */
       const distanceFromBottom =
         pageHeight - scrollPosition;
 
-
       if (distanceFromBottom <= 1000) {
-
         loadMoreProducts();
-
       }
-
     };
 
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
 
-    window.addEventListener(
-      "scroll",
-      handleScroll,
-      { passive: true }
-    );
-
-
-    /*
-        Check once when the page initially loads.
-        This handles cases where the content isn't
-        tall enough to require scrolling.
-    */
+    // Check on initial load as well.
     handleScroll();
 
-
     return () => {
-
-      window.removeEventListener(
-        "scroll",
-        handleScroll
-      );
-
+      window.removeEventListener("scroll", handleScroll);
     };
-
-  }, [
-    loading,
-    hasNextPage,
-    loadMoreProducts,
-  ]);
-
+  }, [loading, hasNextPage, loadMoreProducts]);
 
   return (
-    <div
-      className="
-                gradient
-                min-h-screen
-                bg-[linear-gradient(to_bottom,#e3e6e6_0%,#f3f3f3_30%,#ffffff_100%)]
-            "
-    >
-
+    <div className="gradient min-h-screen w-full overflow-x-clip bg-[linear-gradient(to_bottom,#e3e6e6_0%,#f3f3f3_30%,#ffffff_100%)]">
+      {/* Navbar */}
       <Navbar products={productNames} />
 
+      {/* Hero carousel */}
       <Carousel />
 
-
-      <div
-        className="
-                    relative
-                    z-20
-                    px-3
-                    md:px-6
-                    mt-4
-                    md:-mt-60
-                "
-      >
-
-        <div
-          className="
-                        max-w-[1500px]
-                        mt-8
-                        mx-auto
-                        grid
-                        grid-cols-1
-                        sm:grid-cols-2
-                        lg:grid-cols-3
-                        xl:grid-cols-4
-                        gap-5
-                    "
-        >
-
+      {/* Product categories */}
+      <main className="relative z-20 mx-auto mt-3 w-full px-3 sm:px-4 md:-mt-60 md:mt-0 md:px-6">
+        <div className="mx-auto mt-0 grid w-full max-w-[1500px] grid-cols-1 gap-4 min-[520px]:grid-cols-2 md:mt-8 md:gap-5 lg:grid-cols-3 xl:grid-cols-4">
           {categories.map((category) => (
-
             <CategoryCard
               key={category.id}
               categoryName={category.category}
               product={category}
             />
-
           ))}
-
         </div>
+      </main>
 
-
-
-      </div>
-
-
+      {/* Existing floating filter */}
       <FloatingFilter />
-
     </div>
   );
 };
-
 
 export default Home;

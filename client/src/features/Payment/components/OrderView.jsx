@@ -221,13 +221,13 @@ const OrderView = () => {
 
         {
             key: "processing",
-            label: "Order Placed",
+            label: "Placed",
             icon: Check
         },
 
         {
             key: "confirmed",
-            label: "Order Confirmed",
+            label: "Confirmed",
             icon: Package
         },
 

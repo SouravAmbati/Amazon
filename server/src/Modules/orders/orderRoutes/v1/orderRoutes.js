@@ -10,6 +10,7 @@ const OrderRouter = express.Router();
 
 OrderRouter.post(
     "/order",
+    authorize,
     addOrderController
 );
 

@@ -23,9 +23,9 @@ const App = () => {
                 <Route
                     path="/product/:productid"
                     element={
-                        <DesktopOnly>
+                       
                             <ProductDetail />
-                        </DesktopOnly>
+                        
                     }
                 />
 
@@ -61,54 +61,54 @@ const App = () => {
                     <Route
                         path="/"
                         element={
-                            <DesktopOnly>
+                           
                                 <Home />
-                            </DesktopOnly>
+                           
                         }
                     />
 
                     <Route
                         path="/cart"
                         element={
-                            <DesktopOnly>
+                           
                                 <CartPage />
-                            </DesktopOnly>
+                            
                         }
                     />
 
                     <Route
                         path="/payment"
                         element={
-                            <DesktopOnly>
+                           
                                 <CheckoutPage />
-                            </DesktopOnly>
+                            
                         }
                     />
 
                     <Route
                         path="/product"
                         element={
-                            <DesktopOnly>
+                            
                                 <SpecificCategoryProductPage />
-                            </DesktopOnly>
+                           
                         }
                     />
 
                     <Route
                         path="/order/:orderId"
                         element={
-                            <DesktopOnly>
+                           
                                 <OrderView />
-                            </DesktopOnly>
+                            
                         }
                     />
 
                     <Route
                         path="/orders"
                         element={
-                            <DesktopOnly>
+                           
                                 <Orders />
-                            </DesktopOnly>
+                            
                         }
                     />
                 </Route>
