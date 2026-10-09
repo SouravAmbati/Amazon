@@ -7,12 +7,15 @@ import AuthRouter from "./src/Modules/AdminProducts/AdminAuthentication/AdminAut
 import ProductRouter from "./src/Modules/ClientProducts/ClientRoutes/v1/ProductRoute.js";
 import CartRouter from "./src/Modules/carts/cartRoutes/v1/cartRoute.js";
 import OrderRouter from "./src/Modules/orders/orderRoutes/v1/orderRoutes.js";
+import UserRouter from "./src/Modules/User/UserRoutes/v1/User.route.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT;
 app.use(express.json());
+app.use(cookieParser());
 app.use(
   cors({
     origin: [
@@ -30,6 +33,7 @@ app.use("/api/auth/v1", AuthRouter);
 app.use("/api/products/v1", ProductRouter);
 app.use("/api/carts/v1", CartRouter);
 app.use("/api/orders/v1", OrderRouter);
+app.use("/api/user/v1", UserRouter);
 
 app.listen(port, () => {
   console.log(`listening on port ${port}`);

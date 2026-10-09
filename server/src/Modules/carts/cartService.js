@@ -1,3 +1,4 @@
+
 import {
     AddToCartRepository,
     RemoveFromCartRepository,
@@ -5,46 +6,29 @@ import {
     GetCartRepository
 } from "./cartRepository.js";
 
-
 export async function AddToCartService(
     productId,
-    counts
+    counts,
+    userId
 ) {
-
-    return await AddToCartRepository(
-        productId,
-        counts
-    );
-
+    return AddToCartRepository(productId, counts, userId);
 }
-
 
 export async function RemoveFromCartService(
-    productId
+    productId,
+    userId
 ) {
-
-    return await RemoveFromCartRepository(
-        productId
-    );
-
+    return RemoveFromCartRepository(productId, userId);
 }
-
 
 export async function IncreaseCountService(
     productId,
-    counts
+    counts,
+    userId
 ) {
-
-    return await IncreaseCountRepository(
-        productId,
-        counts
-    );
-
+    return IncreaseCountRepository(productId, counts, userId);
 }
 
-
-export async function GetCartService() {
-
-    return await GetCartRepository();
-
+export async function GetCartService(userId) {
+    return GetCartRepository(userId);
 }

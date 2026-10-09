@@ -4,7 +4,8 @@ import { addOrderRepository, getOrdersRepository, getOrderStatusRepository, upda
 
 export async function addOrderService(
     productId,
-    quantity
+    quantity,
+    userId
 ) {
 
     if (!productId) {
@@ -14,18 +15,19 @@ export async function addOrderService(
     if (!quantity || Number(quantity) <= 0) {
         throw new Error("Quantity must be greater than 0");
     }
+    if (!userId) throw new Error("Authenticated user is required");
 
     return await addOrderRepository(
         productId,
-        Number(quantity)
+        Number(quantity),
+        userId
     );
 }
 
-export async function getOrdersService() {
+export async function getOrdersService(userId) {
+    if (!userId) throw new Error("Authenticated user is required");
 
-    const response = await getOrdersRepository();
-
-    return response;
+    return getOrdersRepository(userId);
 }
 export async function updateOrderStatusService(
     orderId,
