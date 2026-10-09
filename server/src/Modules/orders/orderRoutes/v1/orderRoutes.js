@@ -1,6 +1,7 @@
 import express from "express";
 import { addOrderController, getOrdersController, getOrderStatusController, updateOrderStatusController } from "../../orderController.js";
 import { authorize } from "../../../../middleware/authorize.js";
+import { getAllOrdersController } from "../../AdminOrderController.js";
 
 
 
@@ -9,7 +10,6 @@ const OrderRouter = express.Router();
 
 OrderRouter.post(
     "/order",
-    authorize,
     addOrderController
 );
 
@@ -22,14 +22,17 @@ OrderRouter.get(
 
 OrderRouter.patch(
     "/order/status",
-    authorize,
     updateOrderStatusController
 );
 
 OrderRouter.get(
     "/order/status",
-    authorize,
     getOrderStatusController
+);
+
+OrderRouter.get(
+    "/admin-orders",
+    getAllOrdersController
 );
 
 export default OrderRouter;
