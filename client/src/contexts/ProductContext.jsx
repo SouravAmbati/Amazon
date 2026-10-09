@@ -87,36 +87,79 @@ export const ProductProvider = ({ children }) => {
     // =====================================================
     // GET PRODUCT BY ID
     // =====================================================
+
     const getProductById = useCallback(
         async (productid) => {
             try {
                 setProductDetailLoading(true);
+
+                // Prevent the previous product from remaining visible.
+                setProductDetail(null);
+
                 console.log("Fetching product:", productid);
+
                 const response = await axios.get(
                     `/api/products/v1/product?productid=${productid}`
                 );
+
                 const result = response.data;
+
                 console.log("Product detail API response:", result);
+
                 if (!result.success) {
                     throw new Error(
                         result.message || "Failed to fetch product"
                     );
                 }
+
                 const product = result.data?.[0];
+
                 if (!product) {
                     throw new Error("Product not found");
                 }
+
+                // Use the images and colors returned by the detail API.
+                // Fall back to the listing state only if needed.
                 const existingProduct = products.find(
                     (item) => item.id === product.id
                 );
+
+                const apiImages = Array.isArray(product.images)
+                    ? product.images
+                    : product.images
+                        ? [product.images]
+                        : [];
+
+                const apiColors = Array.isArray(product.colors)
+                    ? product.colors
+                    : product.colors
+                        ? [product.colors]
+                        : [];
+
                 const completeProduct = {
                     ...product,
-                    images: existingProduct?.images || [],
-                    colors: existingProduct?.colors || [],
-                    image_id: existingProduct?.image_id || product.img,
-                    color_id: existingProduct?.color_id || product.color,
+                    images: apiImages.length > 0
+                        ? apiImages
+                        : Array.isArray(existingProduct?.images)
+                            ? existingProduct.images
+                            : existingProduct?.images
+                                ? [existingProduct.images]
+                                : [],
+                    colors: apiColors.length > 0
+                        ? apiColors
+                        : Array.isArray(existingProduct?.colors)
+                            ? existingProduct.colors
+                            : existingProduct?.colors
+                                ? [existingProduct.colors]
+                                : [],
+                    image_id: product.image_id || product.img || existingProduct?.image_id,
+                    color_id: product.color_id || product.color || existingProduct?.color_id,
                 };
+
+                console.log("Final product images:", completeProduct.images);
+
                 setProductDetail(completeProduct);
+
                 return {
                     success: true,
                     data: completeProduct,
@@ -126,6 +169,7 @@ export const ProductProvider = ({ children }) => {
                     "Get product detail error:",
                     error.response?.data || error.message
                 );
+
                 return {
                     success: false,
                     message:
@@ -139,6 +183,7 @@ export const ProductProvider = ({ children }) => {
         },
         [products]
     );
+
     // =====================================================
     // GET PRODUCTS BY CATEGORY
     // =====================================================
@@ -165,7 +210,7 @@ export const ProductProvider = ({ children }) => {
                 if (!result.success) {
                     throw new Error(
                         result.message ||
-                            "Failed to fetch category products"
+                        "Failed to fetch category products"
                     );
                 }
                 return {
@@ -219,7 +264,7 @@ export const ProductProvider = ({ children }) => {
                 if (!result.success) {
                     throw new Error(
                         result.message ||
-                            "Failed to fetch filtered products"
+                        "Failed to fetch filtered products"
                     );
                 }
                 return {
@@ -389,7 +434,7 @@ export const ProductProvider = ({ children }) => {
                 if (!result.success) {
                     throw new Error(
                         result.message ||
-                            "Failed to update cart quantity"
+                        "Failed to update cart quantity"
                     );
                 }
                 await getCart();
