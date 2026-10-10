@@ -50,9 +50,9 @@ const App = () => {
                 <Route
                     path="/login"
                     element={
-                        <DesktopOnly>
+                       
                             <AuthPage />
-                        </DesktopOnly>
+                       
                     }
                 />
 
