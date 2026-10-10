@@ -29,6 +29,10 @@ app.use(
 
 connectCloudinary();
 
+app.get("/",(req,res)=>{
+  res.json("Server Running Successfully");
+})
+
 app.use("/api/product/v1", UploadRouter);
 app.use("/api/auth/v1", AuthRouter);
 app.use("/api/products/v1", ProductRouter);
