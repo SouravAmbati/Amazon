@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon app.js",
+    "start": "node app.js",
     "db:migrate": "node src/db/migration.js"
   },
   "keywords": [],
