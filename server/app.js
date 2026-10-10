@@ -22,7 +22,7 @@ app.use(
       "http://localhost:5173",
       "http://localhost:5174",
       "http://192.168.1.7:5173",
-      "https://amazon-client-peach.vercel.app",
+      "https://amazon-knvu.vercel.app",
       "https://amazon-mauve-theta.vercel.app",
 
     ],
