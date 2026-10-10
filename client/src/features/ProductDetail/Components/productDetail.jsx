@@ -1,9 +1,11 @@
 import React, { useState, useContext, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProductContext } from "../../../contexts/ProductContext.jsx";
 
 const ProductDetails = () => {
   const { productid } = useParams();
+  const navigate = useNavigate();
+  const [buyingNow, setBuyingNow] = useState(false);
 
   const {
     productDetail,
@@ -32,6 +34,33 @@ const ProductDetails = () => {
       setAddingToCart(false);
     }
   };
+
+  const handleBuyNow = async () => {
+    if (!productid || buyingNow) return;
+
+    setBuyingNow(true);
+
+    try {
+      const response = await addToCart(productid, 1);
+
+      if (!response?.success) {
+        console.error(
+          response?.message || "Failed to add product to cart"
+        );
+        return;
+      }
+
+      navigate("/payment");
+    } catch (error) {
+      console.error(
+        "Buy Now error:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setBuyingNow(false);
+    }
+  };
+
 
   useEffect(() => {
     if (productid) {
@@ -345,10 +374,9 @@ const ProductDetails = () => {
                               relative flex min-h-12 cursor-pointer
                               items-center justify-center rounded-md
                               border p-3 transition
-                              ${
-                                isSelected
-                                  ? "border-indigo-600 bg-indigo-600 text-white"
-                                  : "border-gray-300 bg-white text-gray-900"
+                              ${isSelected
+                                ? "border-indigo-600 bg-indigo-600 text-white"
+                                : "border-gray-300 bg-white text-gray-900"
                               }
                             `}
                           >
@@ -392,19 +420,24 @@ const ProductDetails = () => {
               </button>
 
               {/* BUY NOW */}
-              <Link
-                to="/payment"
+
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                disabled={buyingNow}
                 className="
-                  mt-3 flex min-h-12 w-full items-center justify-center
-                  rounded-md border border-indigo-600
-                  px-6 py-3 text-base font-medium text-black
-                  transition hover:bg-indigo-50
-                  focus:outline-none focus:ring-2
-                  focus:ring-indigo-500 focus:ring-offset-2
-                "
+        mt-3 flex min-h-12 w-full items-center justify-center
+        rounded-md border border-indigo-600
+        px-6 py-3 text-base font-medium text-black
+        transition hover:bg-indigo-50
+        disabled:cursor-not-allowed disabled:opacity-50
+        focus:outline-none focus:ring-2
+        focus:ring-indigo-500 focus:ring-offset-2
+    "
               >
-                Buy Now
-              </Link>
+                {buyingNow ? "Processing..." : "Buy Now"}
+              </button>
+
             </form>
           </div>
         </div>
