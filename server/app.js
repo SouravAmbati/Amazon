@@ -16,24 +16,23 @@ const app = express();
 const port = process.env.PORT;
 app.use(express.json());
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://192.168.1.7:5173",
 
-      // Production frontend
-      "https://amazon-client-peach.vercel.app",
+const corsOptions = {
+  origin: [
+    "https://amazon-client-peach.vercel.app",
+    "https://amazon-mauve-theta.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://192.168.1.7:5173",
+  ],
+  credentials: true,
+  methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-      // Second frontend deployment
-      "https://amazon-mauve-theta.vercel.app",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
+
 
 connectCloudinary();
 
