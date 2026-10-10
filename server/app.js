@@ -40,6 +40,6 @@ app.use("/api/carts/v1", CartRouter);
 app.use("/api/orders/v1", OrderRouter);
 app.use("/api/user/v1", UserRouter);
 
-app.listen(port, () => {
-  console.log(`listening on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`listening on port ${port}`);
+// });
