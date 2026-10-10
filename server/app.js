@@ -22,11 +22,16 @@ app.use(
       "http://localhost:5173",
       "http://localhost:5174",
       "http://192.168.1.7:5173",
-      "https://amazon-client-peach.vercel.app",
-      "https://amazon-mauve-theta.vercel.app",
 
+      // Production frontend
+      "https://amazon-client-peach.vercel.app",
+
+      // Second frontend deployment
+      "https://amazon-mauve-theta.vercel.app",
     ],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
