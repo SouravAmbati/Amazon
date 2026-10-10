@@ -23,7 +23,7 @@ app.use(
       "http://localhost:5174",
       "http://192.168.1.7:5173",
       "https://amazon-knvu.vercel.app",
-      "https://amazon-mauve-theta.vercel.app",
+      "https://amazon-zal5.vercel.app",
 
     ],
     credentials: true,
