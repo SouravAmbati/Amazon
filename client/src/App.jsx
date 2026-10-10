@@ -17,102 +17,72 @@ import ProtectedRoute from "./features/User/components/ProtectedRoute.jsx";
 
 const App = () => {
     return (
-        <div>
-            <Routes>
-                {/* Public routes */}
-                <Route
-                    path="/product/:productid"
-                    element={
-                       
-                            <ProductDetail />
-                        
-                    }
-                />
-
-                <Route
-                    path="/payment-success"
-                    element={
-                        <DesktopOnly>
-                            <PaymentSuccess />
-                        </DesktopOnly>
-                    }
-                />
-
-                <Route
-                    path="/payment-cancelled"
-                    element={
-                        <DesktopOnly>
-                            <PaymentCancelled />
-                        </DesktopOnly>
-                    }
-                />
-
-                <Route
-                    path="/login"
-                    element={
-                       
-                            <AuthPage />
-                       
-                    }
-                />
-
-                {/* Protected routes */}
-                <Route element={<ProtectedRoute />}>
+        <div className="flex min-h-screen flex-col">
+            <main className="flex flex-1 flex-col">
+                <Routes>
+                    {/* Public routes */}
                     <Route
-                        path="/"
+                        path="/product/:productid"
+                        element={<ProductDetail />}
+                    />
+
+                    <Route
+                        path="/payment-success"
                         element={
-                           
-                                <Home />
-                           
+                            <DesktopOnly>
+                                <PaymentSuccess />
+                            </DesktopOnly>
                         }
                     />
 
                     <Route
-                        path="/cart"
+                        path="/payment-cancelled"
                         element={
-                           
-                                <CartPage />
-                            
+                            <DesktopOnly>
+                                <PaymentCancelled />
+                            </DesktopOnly>
                         }
                     />
 
                     <Route
-                        path="/payment"
-                        element={
-                           
-                                <CheckoutPage />
-                            
-                        }
+                        path="/login"
+                        element={<AuthPage />}
                     />
 
-                    <Route
-                        path="/product"
-                        element={
-                            
-                                <SpecificCategoryProductPage />
-                           
-                        }
-                    />
+                    {/* Protected routes */}
+                    <Route element={<ProtectedRoute />}>
+                        <Route
+                            path="/"
+                            element={<Home />}
+                        />
 
-                    <Route
-                        path="/order/:orderId"
-                        element={
-                           
-                                <OrderView />
-                            
-                        }
-                    />
+                        <Route
+                            path="/cart"
+                            element={<CartPage />}
+                        />
 
-                    <Route
-                        path="/orders"
-                        element={
-                           
-                                <Orders />
-                            
-                        }
-                    />
-                </Route>
-            </Routes>
+                        <Route
+                            path="/payment"
+                            element={<CheckoutPage />}
+                        />
+
+                        <Route
+                            path="/product"
+                            element={<SpecificCategoryProductPage />}
+                        />
+
+                        <Route
+                            path="/order/:orderId"
+                            element={<OrderView />}
+                        />
+
+                        <Route
+                            path="/orders"
+                            element={<Orders />}
+                        />
+                    </Route>
+                </Routes>
+            </main>
 
             <Footer />
         </div>

@@ -4,13 +4,15 @@ import React, {
   useState
 } from "react";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate  } from "react-router-dom";
 import { ProductContext } from "../../../contexts/ProductContext.jsx";
+import { toast } from 'react-toastify';
 
 
 
 
 const CheckOut = () => {
+  const navigate = useNavigate ();
 
   const {
     cartItems,
@@ -67,7 +69,7 @@ const CheckOut = () => {
 
     if (cartItems.length === 0) {
 
-      alert("Your cart is empty");
+      toast.error("your cart is empty");
 
       return;
     }
@@ -185,9 +187,10 @@ const CheckOut = () => {
         setOrderedProducts(
           ordersResponse.data
         );
+        const firstOrder = ordersResponse.data[0];
+        navigate(`/order/${firstOrder.order_id}`)
 
-
-        alert(
+        toast.success(
           "Order placed successfully"
         );
 
