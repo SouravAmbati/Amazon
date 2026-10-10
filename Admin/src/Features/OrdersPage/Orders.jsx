@@ -573,22 +573,6 @@ const Orders = () => {
                                         tracking-wider
                                     "
                                 >
-                                    Customer
-                                </th>
-
-
-                                <th
-                                    className="
-                                        px-6
-                                        py-4
-                                        text-left
-                                        text-xs
-                                        font-semibold
-                                        text-gray-500
-                                        uppercase
-                                        tracking-wider
-                                    "
-                                >
                                     Order Details
                                 </th>
 
@@ -727,33 +711,9 @@ const Orders = () => {
                                                         order.productName
                                                     }
                                                 </p>
-
-
-                                                <p className="text-xs text-gray-400 mt-1">
-
-                                                    Order #
-                                                    {order.id}
-
-                                                </p>
-
                                             </div>
 
                                         </div>
-
-                                    </td>
-
-
-                                    {/* CUSTOMER */}
-
-                                    <td className="px-6 py-5">
-
-                                        <p className="text-sm font-medium text-gray-900">
-
-                                            {
-                                                order.customerName
-                                            }
-
-                                        </p>
 
                                     </td>
 
