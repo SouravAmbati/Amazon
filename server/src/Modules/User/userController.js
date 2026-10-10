@@ -6,7 +6,7 @@ import {
 
 const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "lax",
     maxAge: 24 * 60 * 60 * 1000,
     path: "/",
@@ -14,7 +14,7 @@ const cookieOptions = {
 
 const clearCookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "lax",
     path: "/",
 };
