@@ -16,23 +16,19 @@ const app = express();
 const port = process.env.PORT;
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://192.168.1.7:5173",
+      "https://amazon-client-peach.vercel.app",
+      "https://amazon-mauve-theta.vercel.app",
 
-const corsOptions = {
-  origin: [
-    "https://amazon-client-peach.vercel.app",
-    "https://amazon-mauve-theta.vercel.app",
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://192.168.1.7:5173",
-  ],
-  credentials: true,
-  methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
-
+    ],
+    credentials: true,
+  })
+);
 
 connectCloudinary();
 
@@ -46,7 +42,8 @@ app.use("/api/products/v1", ProductRouter);
 app.use("/api/carts/v1", CartRouter);
 app.use("/api/orders/v1", OrderRouter);
 app.use("/api/user/v1", UserRouter);
-export default app;
-// app.listen(port, () => {
-//   console.log(`listening on port ${port}`);
-// });
+
+
+app.listen(port, () => {
+  console.log(`listening on port ${port}`);
+});
