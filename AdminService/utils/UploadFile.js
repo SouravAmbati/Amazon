@@ -27,7 +27,8 @@ export async function uploadFile(images){
         const url=await createSignedUrl(command);
         urls.push({
             name:image.name,
-            url:url
+            url:url,
+            key:`uploads/product_images/${image.name}`
         })
     }
     return urls;
