@@ -21,6 +21,7 @@ const CreateProduct = () => {
         sizes: []
     });
     const { CreateProduct } = useContext(ProductContext);
+    const [submitting, setSubmitting] = useState(false);
 
     const [images, setImages] = useState([]);
     const [selectedColor, setSelectedColor] = useState("#000000");
@@ -144,20 +145,53 @@ const CreateProduct = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const productData = {
-            ...product,
-            images: images.map((image) => image.file)
-        };
+        if (submitting) return;
 
-        console.log("SUBMIT FIRED");
-        console.log(productData);
+        if (images.length === 0) {
+            toast.error("Please select at least one image");
+            return;
+        }
 
-        const res = await CreateProduct(productData,idempotencyKey);
+        if (!product.name.trim() || !product.category || !product.price) {
+            toast.error("Please complete all required product fields");
+            return;
+        }
 
-        if (res) {
-            toast.success(res);
-        } else {
-            toast.error("Failed to create product");
+        setSubmitting(true);
+
+        try {
+            const productData = {
+                ...product,
+                images: images.map((image) => image.file),
+            };
+
+            const result = await CreateProduct(
+                productData,
+                idempotencyKey
+            );
+
+            toast.success(result);
+
+            // Reset form after successful creation.
+            images.forEach((image) => {
+                URL.revokeObjectURL(image.preview);
+            });
+
+            setImages([]);
+
+            setProduct({
+                name: "",
+                category: "",
+                price: "",
+                description: "",
+                colors: [],
+                sizes: [],
+            });
+
+        } catch (error) {
+            toast.error(error.message || "Failed to create product");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -764,6 +798,7 @@ const CreateProduct = () => {
 
                         <button
                             type="submit"
+                            disabled={submitting}
                             className="
                                 flex
                                 items-center

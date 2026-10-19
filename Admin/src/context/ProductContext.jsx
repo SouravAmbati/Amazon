@@ -41,7 +41,7 @@ export const ProductProvider = ({ children }) => {
             );
 
             const response = res.data;
-            console.log("debug",response);
+            console.log("debug", response);
 
             console.log(`Page ${page} response:`, response);
 
@@ -177,78 +177,115 @@ export const ProductProvider = ({ children }) => {
     // CREATE PRODUCT
     // --------------------------------------------------
 
-    const CreateProduct = async (
-        sentProduct,
-        idempotencyKey
-    ) => {
 
+    const CreateProduct = async (sentProduct, idempotencyKey) => {
         try {
+            if (!sentProduct.images?.length) {
+                throw new Error("Please select at least one image");
+            }
 
-            const formData = new FormData();
+            // STEP 1: Send image metadata to generate signed URLs.
+            const imageMetadata = sentProduct.images.map((file) => ({
+                name: file.name,
+                originalname: file.name,
+                mimetype: file.type,
+                size: file.size,
+            }));
 
-            formData.append(
-                "product_name",
-                sentProduct.name
+            const uploadResponse = await axios.post(
+                "/admin/image-upload",
+                { images: imageMetadata }
             );
 
-            formData.append(
-                "category",
-                sentProduct.category
+            if (!uploadResponse.data.success) {
+                throw new Error(
+                    uploadResponse.data.message || "Failed to generate upload URLs"
+                );
+            }
+
+            const uploadUrls = uploadResponse.data.urls;
+
+            if (
+                !Array.isArray(uploadUrls) ||
+                uploadUrls.length !== sentProduct.images.length
+            ) {
+                throw new Error("Invalid upload URLs received from server");
+            }
+
+            // STEP 2: Upload actual files directly to Backblaze B2.
+            const uploadedImages = await Promise.all(
+                sentProduct.images.map(async (file, index) => {
+                    const signedUpload = uploadUrls[index];
+
+                    const response = await fetch(signedUpload.url, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": file.type,
+                        },
+                        body: file,
+                    });
+
+                    if (!response.ok) {
+                        const details = await response.text();
+
+                        throw new Error(
+                            `Upload failed for ${file.name}: ${response.status} ${details}`
+                        );
+                    }
+
+                    return {
+                        name: signedUpload.name,
+                        key: signedUpload.key,
+                    };
+                })
             );
 
-            formData.append(
-                "price",
-                sentProduct.price
-            );
+            // STEP 3: Create product only after every image upload succeeds.
+            const productPayload = {
+                product_name: sentProduct.name,
+                category: sentProduct.category,
+                price: Number(sentProduct.price),
+                about_product: sentProduct.description,
+                colors: sentProduct.colors,
+                sizes: sentProduct.sizes,
+                urls: uploadedImages,
+            };
 
-            formData.append(
-                "about_product",
-                sentProduct.description
-            );
-
-            formData.append(
-                "colors",
-                JSON.stringify(sentProduct.colors)
-            );
-
-            formData.append(
-                "sizes",
-                JSON.stringify(sentProduct.sizes)
-            );
-
-            sentProduct.images.forEach(
-                (image, index) => {
-
-                    formData.append(
-                        `image${index + 1}`,
-                        image
-                    );
-
-                }
-            );
-
-            const res = await axios.post(
-                "/api/product/v1/product",
-                formData,
+            const productResponse = await axios.post(
+                "/admin/products-upload",
+                productPayload,
                 {
                     headers: {
-                        "idempotencyKey": idempotencyKey
-                    }
+                        "IdempotencyKey": idempotencyKey,
+                    },
                 }
             );
 
-            return res.data.message;
+            if (!productResponse.data.success) {
+                throw new Error(
+                    productResponse.data.message || "Failed to create product"
+                );
+            }
+
+            return (
+                productResponse.data.message ||
+                "Product created successfully"
+            );
 
         } catch (error) {
-
             console.error(
                 "Create product error:",
                 error.response?.data || error
             );
 
-            return null;
+            throw new Error(
+                error.response?.data?.message ||
+                error.message ||
+                "Failed to create product"
+            );
         }
     };
+
 
 
     // --------------------------------------------------
@@ -442,97 +479,97 @@ export const ProductProvider = ({ children }) => {
     };
 
     // --------------------------------------------------
-// UPDATE ORDER STATUS
-// --------------------------------------------------
+    // UPDATE ORDER STATUS
+    // --------------------------------------------------
 
-const UpdateOrderStatus = async (
-    orderId,
-    status
-) => {
-    try {
-        const response = await axios.patch(
-            "/api/orders/v1/order/status",
-            {
-                orderId,
-                status,
+    const UpdateOrderStatus = async (
+        orderId,
+        status
+    ) => {
+        try {
+            const response = await axios.patch(
+                "/api/orders/v1/order/status",
+                {
+                    orderId,
+                    status,
+                }
+            );
+
+            const result = response.data;
+
+            if (!result.success) {
+                throw new Error(
+                    result.message ||
+                    "Failed to update order status"
+                );
             }
-        );
 
-        const result = response.data;
+            return {
+                success: true,
+                data: result.result,
+                message: result.message,
+            };
 
-        if (!result.success) {
-            throw new Error(
-                result.message ||
-                "Failed to update order status"
+        } catch (error) {
+            console.error(
+                "Update order status error:",
+                error.response?.data ||
+                error.message
             );
+
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Failed to update order status",
+            };
         }
+    };
+    // --------------------------------------------------
+    // GET ORDERS
+    // --------------------------------------------------
 
-        return {
-            success: true,
-            data: result.result,
-            message: result.message,
-        };
-
-    } catch (error) {
-        console.error(
-            "Update order status error:",
-            error.response?.data ||
-            error.message
-        );
-
-        return {
-            success: false,
-            message:
-                error.response?.data?.message ||
-                error.message ||
-                "Failed to update order status",
-        };
-    }
-};
-// --------------------------------------------------
-// GET ORDERS
-// --------------------------------------------------
-
-const GetOrders = async () => {
-    try {
-        const response = await axios.get(
-            "/api/orders/v1/admin-orders"
-        );
-
-        const result = response.data;
-
-        if (!result.success) {
-            throw new Error(
-                result.message ||
-                "Failed to fetch orders"
+    const GetOrders = async () => {
+        try {
+            const response = await axios.get(
+                "/api/orders/v1/admin-orders"
             );
+
+            const result = response.data;
+
+            if (!result.success) {
+                throw new Error(
+                    result.message ||
+                    "Failed to fetch orders"
+                );
+            }
+
+            return {
+                success: true,
+                data: Array.isArray(result.data)
+                    ? result.data
+                    : [],
+            };
+
+        } catch (error) {
+
+            console.error(
+                "Get orders error:",
+                error.response?.data ||
+                error.message
+            );
+
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Failed to fetch orders",
+                data: [],
+            };
         }
-
-        return {
-            success: true,
-            data: Array.isArray(result.data)
-                ? result.data
-                : [],
-        };
-
-    } catch (error) {
-
-        console.error(
-            "Get orders error:",
-            error.response?.data ||
-            error.message
-        );
-
-        return {
-            success: false,
-            message:
-                error.response?.data?.message ||
-                error.message ||
-                "Failed to fetch orders",
-            data: [],
-        };
-    }
-};
+    };
 
 
     return (
