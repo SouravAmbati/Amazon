@@ -1,6 +1,7 @@
 import { uploadFile } from "../utils/UploadFile.js";
 import { cursorSchema } from "../validators/cursorValidator.js";
 import { createProductSchema, updateProductSchema } from "../validators/product.validator.js";
+import { FormatImageVersions } from "../Workers/ImageProcessingWorker.js";
 import { createProductService, getAllTheProducts, updateProductService } from "./AdminService.js";
 
 export const UploadUrls=async(req,res)=>{
@@ -49,6 +50,7 @@ export const createProduct = async (req, res) => {
       data.price,
       data.category,
     );
+    await FormatImageVersions(response.productId,imageKeys);
     res.status(201).json(response);
   } catch (error) {
     return res.status(400).json({

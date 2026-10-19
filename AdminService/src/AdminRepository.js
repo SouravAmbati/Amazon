@@ -102,7 +102,7 @@ export async function createProductInDB(
     const response = {
       success: true,
       message: "Product created successfully",
-      productId,
+      productId:productId,
     };
 
     await client.query(
@@ -151,6 +151,7 @@ export async function getProducts(cursor) {
         ON p.color = c.id
     INNER JOIN images i
         ON p.img = i.id
+    WHERE p.status = 'ACTIVE'
     ORDER BY p.id ASC
     LIMIT 5
 `,);
@@ -187,7 +188,7 @@ export async function getProducts(cursor) {
         ON p.color = c.id
     INNER JOIN images i
         ON p.img = i.id
-    WHERE p.id>$1
+    WHERE p.id>$1 AND WHERE p.status = 'ACTIVE'
     ORDER BY p.id ASC
     LIMIT 5
 `,[cursor]);
