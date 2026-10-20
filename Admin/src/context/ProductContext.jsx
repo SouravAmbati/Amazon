@@ -184,7 +184,7 @@ export const ProductProvider = ({ children }) => {
                 throw new Error("Please select at least one image");
             }
 
-            // STEP 1: Send image metadata to generate signed URLs.
+            // STEP 1: Send image metadata for validation.
             const imageMetadata = sentProduct.images.map((file) => ({
                 name: file.name,
                 originalname: file.name,
@@ -192,55 +192,59 @@ export const ProductProvider = ({ children }) => {
                 size: file.size,
             }));
 
-            const uploadResponse = await axios.post(
-                "/admin/image-upload",
-                { images: imageMetadata }
+            const validationResponse = await axios.post(
+                "/api/product/v1/image-validate",
+                { images: imageMetadata },
             );
 
-            if (!uploadResponse.data.success) {
+            if (!validationResponse.data.success) {
                 throw new Error(
-                    uploadResponse.data.message || "Failed to generate upload URLs"
+                    validationResponse.data.message ||
+                    "Image validation failed",
                 );
             }
 
-            const uploadUrls = uploadResponse.data.urls;
+            const uploadDetails = validationResponse.data.uploadDetails;
 
             if (
-                !Array.isArray(uploadUrls) ||
-                uploadUrls.length !== sentProduct.images.length
+                !Array.isArray(uploadDetails) ||
+                uploadDetails.length !== sentProduct.images.length
             ) {
-                throw new Error("Invalid upload URLs received from server");
+                throw new Error("Invalid upload details received");
             }
 
-            // STEP 2: Upload actual files directly to Backblaze B2.
+            // STEP 2: Upload images directly to Cloudinary.
             const uploadedImages = await Promise.all(
                 sentProduct.images.map(async (file, index) => {
-                    const signedUpload = uploadUrls[index];
+                    const details = uploadDetails[index];
 
-                    const response = await fetch(signedUpload.url, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": file.type,
-                        },
-                        body: file,
+                    const formData = new FormData();
+
+                    formData.append("file", file);
+                    formData.append("api_key", details.apiKey);
+                    formData.append("timestamp", String(details.timestamp));
+                    formData.append("signature", details.signature);
+                    formData.append("folder", details.folder);
+
+                    const response = await fetch(details.uploadUrl, {
+                        method: "POST",
+                        body: formData,
                     });
 
-                    if (!response.ok) {
-                        const details = await response.text();
+                    const result = await response.json();
 
+                    if (!response.ok) {
                         throw new Error(
-                            `Upload failed for ${file.name}: ${response.status} ${details}`
+                            result.error?.message ||
+                            `Failed to upload ${file.name}`,
                         );
                     }
 
-                    return {
-                        name: signedUpload.name,
-                        key: signedUpload.key,
-                    };
-                })
+                    return result.secure_url;
+                }),
             );
 
-            // STEP 3: Create product only after every image upload succeeds.
+            // STEP 3: Send product data and Cloudinary URLs to backend.
             const productPayload = {
                 product_name: sentProduct.name,
                 category: sentProduct.category,
@@ -248,22 +252,23 @@ export const ProductProvider = ({ children }) => {
                 about_product: sentProduct.description,
                 colors: sentProduct.colors,
                 sizes: sentProduct.sizes,
-                urls: uploadedImages,
+                images: uploadedImages,
             };
 
             const productResponse = await axios.post(
-                "/admin/products-upload",
+                "/api/product/v1/product",
                 productPayload,
                 {
                     headers: {
-                        "IdempotencyKey": idempotencyKey,
+                        IdempotencyKey: idempotencyKey,
                     },
-                }
+                },
             );
 
             if (!productResponse.data.success) {
                 throw new Error(
-                    productResponse.data.message || "Failed to create product"
+                    productResponse.data.message ||
+                    "Failed to create product",
                 );
             }
 
@@ -271,17 +276,16 @@ export const ProductProvider = ({ children }) => {
                 productResponse.data.message ||
                 "Product created successfully"
             );
-
         } catch (error) {
             console.error(
                 "Create product error:",
-                error.response?.data || error
+                error.response?.data || error,
             );
 
             throw new Error(
                 error.response?.data?.message ||
                 error.message ||
-                "Failed to create product"
+                "Failed to create product",
             );
         }
     };

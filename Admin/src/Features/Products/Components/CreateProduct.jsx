@@ -3,7 +3,8 @@ import {
     ImagePlus,
     X,
     Plus,
-    PackagePlus
+    PackagePlus,
+    LoaderCircle
 } from "lucide-react";
 import { ProductContext } from "../../../context/ProductContext";
 import { toast } from 'react-toastify';
@@ -795,33 +796,33 @@ const CreateProduct = () => {
                     {/* SUBMIT */}
 
                     <div className="flex justify-end">
-
                         <button
                             type="submit"
                             disabled={submitting}
                             className="
-                                flex
-                                items-center
-                                gap-2
-                                px-6
-                                py-3
-                                bg-gray-900
-                                text-white
-                                text-sm
-                                font-semibold
-                                rounded-lg
-                                hover:bg-gray-700
-                                transition
-                                shadow-sm
-                            "
+            flex items-center justify-center gap-2
+            min-w-48 px-6 py-3
+            bg-gray-900 text-white text-sm font-semibold
+            rounded-lg hover:bg-gray-700
+            disabled:opacity-60 disabled:cursor-not-allowed
+            transition shadow-sm
+        "
                         >
-
-                            <PackagePlus size={19} />
-
-                            Create Product
-
+                            {submitting ? (
+                                <>
+                                    <LoaderCircle
+                                        size={19}
+                                        className="animate-spin"
+                                    />
+                                    Uploading Product...
+                                </>
+                            ) : (
+                                <>
+                                    <PackagePlus size={19} />
+                                    Create Product
+                                </>
+                            )}
                         </button>
-
                     </div>
 
                 </form>
