@@ -10,6 +10,8 @@ import {
 } from "./AdminValidators/productValidator.js";
 import { checkFileType } from "../../utils/imageProcessing.js";
 import { cursorSchema } from "./AdminValidators/cursorValidator.js";
+import { deleteCloudinaryImages } from "../../utils/deleteCloudinaryImages.js";
+import { storeInactiveImages } from "../../utils/storeInactiveImages.js";
 
 export const UploadImageURL = async (req, res) => {
   try {
@@ -117,6 +119,40 @@ export const createProduct = async (req, res) => {
 
     return res.status(201).json(response);
   } catch (error) {
+    if (imagesURL.length > 0) {
+    try {
+        const { results, failedImageIds } =
+            await deleteCloudinaryImages(imagesURL);
+
+        console.log("Cloudinary cleanup results:", results);
+
+        if (failedImageIds.length > 0) {
+            await storeInactiveImages(failedImageIds);
+        }
+    } catch (cleanupError) {
+        console.error("Cloudinary cleanup failed:", cleanupError);
+
+        // If the cleanup function itself fails unexpectedly,
+        // preserve all candidate IDs for a later retry.
+        const candidateIds = imagesURL
+            .map((url) => {
+                if (typeof url !== "string") return null;
+
+                const match = url.match(
+                    /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/
+                );
+
+                return match ? match[1] : null;
+            })
+            .filter(Boolean);
+
+        try {
+            await storeInactiveImages(candidateIds);
+        } catch (dbError) {
+            console.error("Failed to save image IDs for retry:", dbError);
+        }
+    }
+}
     return res.status(400).json({
       success: false,
       message: error.message,
@@ -183,11 +219,40 @@ export const updateProduct = async (req, res) => {
     //send the response
     res.status(200).json(response);
   } catch (error) {
-    await Promise.allSettled(
-      uploadedImages.map((image) =>
-        cloudinary.uploader.destroy(image.public_id),
-      ),
-    );
+    if (imagesURL.length > 0) {
+    try {
+        const { results, failedImageIds } =
+            await deleteCloudinaryImages(imagesURL);
+
+        console.log("Cloudinary cleanup results:", results);
+
+        if (failedImageIds.length > 0) {
+            await storeInactiveImages(failedImageIds);
+        }
+    } catch (cleanupError) {
+        console.error("Cloudinary cleanup failed:", cleanupError);
+
+        // If the cleanup function itself fails unexpectedly,
+        // preserve all candidate IDs for a later retry.
+        const candidateIds = imagesURL
+            .map((url) => {
+                if (typeof url !== "string") return null;
+
+                const match = url.match(
+                    /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/
+                );
+
+                return match ? match[1] : null;
+            })
+            .filter(Boolean);
+
+        try {
+            await storeInactiveImages(candidateIds);
+        } catch (dbError) {
+            console.error("Failed to save image IDs for retry:", dbError);
+        }
+    }
+}
     return res.status(400).json({
       success: false,
       message: error.message,
