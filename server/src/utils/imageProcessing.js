@@ -1,5 +1,3 @@
-import { fileTypeFromFile } from "file-type";
-import sharp from "sharp";
 
 export const checkFileType = async (images) => {
   const MAX_FILE_SIZE = 5 * 1024 * 1024;

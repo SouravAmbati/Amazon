@@ -296,104 +296,136 @@ export const ProductProvider = ({ children }) => {
     // UPDATE PRODUCT
     // --------------------------------------------------
 
+
     const UpdateProduct = async (
         product,
         updatedProduct,
         idempotencyKey
     ) => {
+        const uploadedImages = [];
 
         try {
+            let finalImages = Array.isArray(product.images)
+                ? [...product.images]
+                : [];
 
-            const formData = new FormData();
-
-            formData.append(
-                "product_name",
-                updatedProduct.name
-            );
-
-            formData.append(
-                "category",
-                updatedProduct.category
-            );
-
-            formData.append(
-                "price",
-                updatedProduct.price
-            );
-
-            formData.append(
-                "about_product",
-                updatedProduct.description
-            );
-
-            formData.append(
-                "colors",
-                JSON.stringify(updatedProduct.colors)
-            );
-
-            formData.append(
-                "sizes",
-                JSON.stringify(updatedProduct.sizes)
-            );
-
-
-            // ------------------------------------------
-            // NEW IMAGES
-            // ------------------------------------------
+            // --------------------------------------------------
+            // STEP 1: VALIDATE NEW IMAGE METADATA
+            // --------------------------------------------------
 
             if (
-                updatedProduct.images &&
+                Array.isArray(updatedProduct.images) &&
                 updatedProduct.images.length > 0
             ) {
+                const imageFiles = updatedProduct.images;
 
-                updatedProduct.images
-                    .forEach((image, index) => {
+                const imagesMetadata = imageFiles.map((file) => ({
+                name: file.name,
+                originalname: file.name,
+                mimetype: file.type,
+                size: file.size,
+            }));
 
+                const validationResponse = await axios.post(
+                    "/api/product/v1/image-validate",
+                    {
+                        images: imagesMetadata,
+                    }
+                );
+
+                if (
+                    !validationResponse.data.success ||
+                    !Array.isArray(validationResponse.data.uploadDetails) ||
+                    validationResponse.data.uploadDetails.length !== imageFiles.length
+                ) {
+                    throw new Error(
+                        "Image validation failed or upload details are invalid"
+                    );
+                }
+
+                const uploadDetails =
+                    validationResponse.data.uploadDetails;
+
+                // --------------------------------------------------
+                // STEP 2: UPLOAD NEW IMAGES DIRECTLY TO CLOUDINARY
+                // --------------------------------------------------
+
+                const uploadedResults = await Promise.all(
+                    imageFiles.map(async (image, index) => {
+                        const details = uploadDetails[index];
+
+                        const formData = new FormData();
+
+                        formData.append("file", image);
+                        formData.append("api_key", details.apiKey);
                         formData.append(
-                            `image${index + 1}`,
-                            image
+                            "timestamp",
+                            String(details.timestamp)
+                        );
+                        formData.append("signature", details.signature);
+                        formData.append("folder", details.folder);
+
+                        const cloudinaryResponse = await axios.post(
+                            details.uploadUrl,
+                            formData
                         );
 
-                    });
+                        const result = cloudinaryResponse.data;
 
+                        if (!result.secure_url || !result.public_id) {
+                            throw new Error(
+                                "Cloudinary did not return the uploaded image details"
+                            );
+                        }
+
+                        uploadedImages.push({
+                            public_id: result.public_id,
+                            secure_url: result.secure_url,
+                        });
+
+                        return result.secure_url;
+                    })
+                );
+
+                // Replace old URLs with the newly uploaded URLs.
+                finalImages = uploadedResults;
             }
 
+            // --------------------------------------------------
+            // STEP 3: UPDATE PRODUCT IN YOUR BACKEND
+            // --------------------------------------------------
 
-            // ------------------------------------------
-            // PATCH REQUEST
-            // ------------------------------------------
+            const payload = {
+                product_name: updatedProduct.name,
+                category: updatedProduct.category,
+                price: Number(updatedProduct.price),
+                about_product: updatedProduct.description,
+                colors: updatedProduct.colors,
+                sizes: updatedProduct.sizes,
+                images: finalImages,
+            };
 
-            const res = await axios.patch(
+            const response = await axios.patch(
                 "/api/product/v1/product",
-                formData,
+                payload,
                 {
                     headers: {
-
-                        // Idempotency key comes
-                        // FROM COMPONENT
-                        "idempotencyKey":
-                            idempotencyKey,
-
-                        product_id:
-                            product.id,
-
-                        image_id:
-                            product.imageId,
-
-                        color_id:
-                            product.colorId
-                    }
+                        IdempotencyKey: idempotencyKey,
+                        product_id: product.id,
+                        image_id: product.imageId,
+                        color_id: product.colorId,
+                    },
                 }
             );
 
-
             return {
                 success: true,
-                data: res.data
+                data: {
+                    ...response.data,
+                    images: finalImages,
+                },
             };
-
         } catch (error) {
-
             console.error(
                 "Update product error:",
                 error.response?.data || error
@@ -404,7 +436,7 @@ export const ProductProvider = ({ children }) => {
                 message:
                     error.response?.data?.message ||
                     error.message ||
-                    "Failed to update product"
+                    "Failed to update product",
             };
         }
     };
