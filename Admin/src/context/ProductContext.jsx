@@ -184,7 +184,7 @@ export const ProductProvider = ({ children }) => {
                 throw new Error("Please select at least one image");
             }
 
-            // STEP 1: Send image metadata to generate signed URLs.
+            // STEP 1: Send image metadata for validation.
             const imageMetadata = sentProduct.images.map((file) => ({
                 name: file.name,
                 originalname: file.name,
@@ -192,55 +192,59 @@ export const ProductProvider = ({ children }) => {
                 size: file.size,
             }));
 
-            const uploadResponse = await axios.post(
-                "/admin/image-upload",
-                { images: imageMetadata }
+            const validationResponse = await axios.post(
+                "/api/product/v1/image-validate",
+                { images: imageMetadata },
             );
 
-            if (!uploadResponse.data.success) {
+            if (!validationResponse.data.success) {
                 throw new Error(
-                    uploadResponse.data.message || "Failed to generate upload URLs"
+                    validationResponse.data.message ||
+                    "Image validation failed",
                 );
             }
 
-            const uploadUrls = uploadResponse.data.urls;
+            const uploadDetails = validationResponse.data.uploadDetails;
 
             if (
-                !Array.isArray(uploadUrls) ||
-                uploadUrls.length !== sentProduct.images.length
+                !Array.isArray(uploadDetails) ||
+                uploadDetails.length !== sentProduct.images.length
             ) {
-                throw new Error("Invalid upload URLs received from server");
+                throw new Error("Invalid upload details received");
             }
 
-            // STEP 2: Upload actual files directly to Backblaze B2.
+            // STEP 2: Upload images directly to Cloudinary.
             const uploadedImages = await Promise.all(
                 sentProduct.images.map(async (file, index) => {
-                    const signedUpload = uploadUrls[index];
+                    const details = uploadDetails[index];
 
-                    const response = await fetch(signedUpload.url, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": file.type,
-                        },
-                        body: file,
+                    const formData = new FormData();
+
+                    formData.append("file", file);
+                    formData.append("api_key", details.apiKey);
+                    formData.append("timestamp", String(details.timestamp));
+                    formData.append("signature", details.signature);
+                    formData.append("folder", details.folder);
+
+                    const response = await fetch(details.uploadUrl, {
+                        method: "POST",
+                        body: formData,
                     });
 
-                    if (!response.ok) {
-                        const details = await response.text();
+                    const result = await response.json();
 
+                    if (!response.ok) {
                         throw new Error(
-                            `Upload failed for ${file.name}: ${response.status} ${details}`
+                            result.error?.message ||
+                            `Failed to upload ${file.name}`,
                         );
                     }
 
-                    return {
-                        name: signedUpload.name,
-                        key: signedUpload.key,
-                    };
-                })
+                    return result.secure_url;
+                }),
             );
 
-            // STEP 3: Create product only after every image upload succeeds.
+            // STEP 3: Send product data and Cloudinary URLs to backend.
             const productPayload = {
                 product_name: sentProduct.name,
                 category: sentProduct.category,
@@ -248,22 +252,23 @@ export const ProductProvider = ({ children }) => {
                 about_product: sentProduct.description,
                 colors: sentProduct.colors,
                 sizes: sentProduct.sizes,
-                urls: uploadedImages,
+                images: uploadedImages,
             };
 
             const productResponse = await axios.post(
-                "/admin/products-upload",
+                "/api/product/v1/product",
                 productPayload,
                 {
                     headers: {
-                        "IdempotencyKey": idempotencyKey,
+                        IdempotencyKey: idempotencyKey,
                     },
-                }
+                },
             );
 
             if (!productResponse.data.success) {
                 throw new Error(
-                    productResponse.data.message || "Failed to create product"
+                    productResponse.data.message ||
+                    "Failed to create product",
                 );
             }
 
@@ -271,17 +276,16 @@ export const ProductProvider = ({ children }) => {
                 productResponse.data.message ||
                 "Product created successfully"
             );
-
         } catch (error) {
             console.error(
                 "Create product error:",
-                error.response?.data || error
+                error.response?.data || error,
             );
 
             throw new Error(
                 error.response?.data?.message ||
                 error.message ||
-                "Failed to create product"
+                "Failed to create product",
             );
         }
     };
@@ -292,104 +296,136 @@ export const ProductProvider = ({ children }) => {
     // UPDATE PRODUCT
     // --------------------------------------------------
 
+
     const UpdateProduct = async (
         product,
         updatedProduct,
         idempotencyKey
     ) => {
+        const uploadedImages = [];
 
         try {
+            let finalImages = Array.isArray(product.images)
+                ? [...product.images]
+                : [];
 
-            const formData = new FormData();
-
-            formData.append(
-                "product_name",
-                updatedProduct.name
-            );
-
-            formData.append(
-                "category",
-                updatedProduct.category
-            );
-
-            formData.append(
-                "price",
-                updatedProduct.price
-            );
-
-            formData.append(
-                "about_product",
-                updatedProduct.description
-            );
-
-            formData.append(
-                "colors",
-                JSON.stringify(updatedProduct.colors)
-            );
-
-            formData.append(
-                "sizes",
-                JSON.stringify(updatedProduct.sizes)
-            );
-
-
-            // ------------------------------------------
-            // NEW IMAGES
-            // ------------------------------------------
+            // --------------------------------------------------
+            // STEP 1: VALIDATE NEW IMAGE METADATA
+            // --------------------------------------------------
 
             if (
-                updatedProduct.images &&
+                Array.isArray(updatedProduct.images) &&
                 updatedProduct.images.length > 0
             ) {
+                const imageFiles = updatedProduct.images;
 
-                updatedProduct.images
-                    .forEach((image, index) => {
+                const imagesMetadata = imageFiles.map((file) => ({
+                name: file.name,
+                originalname: file.name,
+                mimetype: file.type,
+                size: file.size,
+            }));
 
+                const validationResponse = await axios.post(
+                    "/api/product/v1/image-validate",
+                    {
+                        images: imagesMetadata,
+                    }
+                );
+
+                if (
+                    !validationResponse.data.success ||
+                    !Array.isArray(validationResponse.data.uploadDetails) ||
+                    validationResponse.data.uploadDetails.length !== imageFiles.length
+                ) {
+                    throw new Error(
+                        "Image validation failed or upload details are invalid"
+                    );
+                }
+
+                const uploadDetails =
+                    validationResponse.data.uploadDetails;
+
+                // --------------------------------------------------
+                // STEP 2: UPLOAD NEW IMAGES DIRECTLY TO CLOUDINARY
+                // --------------------------------------------------
+
+                const uploadedResults = await Promise.all(
+                    imageFiles.map(async (image, index) => {
+                        const details = uploadDetails[index];
+
+                        const formData = new FormData();
+
+                        formData.append("file", image);
+                        formData.append("api_key", details.apiKey);
                         formData.append(
-                            `image${index + 1}`,
-                            image
+                            "timestamp",
+                            String(details.timestamp)
+                        );
+                        formData.append("signature", details.signature);
+                        formData.append("folder", details.folder);
+
+                        const cloudinaryResponse = await axios.post(
+                            details.uploadUrl,
+                            formData
                         );
 
-                    });
+                        const result = cloudinaryResponse.data;
 
+                        if (!result.secure_url || !result.public_id) {
+                            throw new Error(
+                                "Cloudinary did not return the uploaded image details"
+                            );
+                        }
+
+                        uploadedImages.push({
+                            public_id: result.public_id,
+                            secure_url: result.secure_url,
+                        });
+
+                        return result.secure_url;
+                    })
+                );
+
+                // Replace old URLs with the newly uploaded URLs.
+                finalImages = uploadedResults;
             }
 
+            // --------------------------------------------------
+            // STEP 3: UPDATE PRODUCT IN YOUR BACKEND
+            // --------------------------------------------------
 
-            // ------------------------------------------
-            // PATCH REQUEST
-            // ------------------------------------------
+            const payload = {
+                product_name: updatedProduct.name,
+                category: updatedProduct.category,
+                price: Number(updatedProduct.price),
+                about_product: updatedProduct.description,
+                colors: updatedProduct.colors,
+                sizes: updatedProduct.sizes,
+                images: finalImages,
+            };
 
-            const res = await axios.patch(
+            const response = await axios.patch(
                 "/api/product/v1/product",
-                formData,
+                payload,
                 {
                     headers: {
-
-                        // Idempotency key comes
-                        // FROM COMPONENT
-                        "idempotencyKey":
-                            idempotencyKey,
-
-                        product_id:
-                            product.id,
-
-                        image_id:
-                            product.imageId,
-
-                        color_id:
-                            product.colorId
-                    }
+                        IdempotencyKey: idempotencyKey,
+                        product_id: product.id,
+                        image_id: product.imageId,
+                        color_id: product.colorId,
+                    },
                 }
             );
 
-
             return {
                 success: true,
-                data: res.data
+                data: {
+                    ...response.data,
+                    images: finalImages,
+                },
             };
-
         } catch (error) {
-
             console.error(
                 "Update product error:",
                 error.response?.data || error
@@ -400,7 +436,7 @@ export const ProductProvider = ({ children }) => {
                 message:
                     error.response?.data?.message ||
                     error.message ||
-                    "Failed to update product"
+                    "Failed to update product",
             };
         }
     };
