@@ -12,6 +12,7 @@ import { checkFileType } from "../../utils/imageProcessing.js";
 import { cursorSchema } from "./AdminValidators/cursorValidator.js";
 import { deleteCloudinaryImages } from "../../utils/deleteCloudinaryImages.js";
 import { storeInactiveImages } from "../../utils/storeInactiveImages.js";
+import qstash from "../../config/qstash.js";
 
 export const UploadImageURL = async (req, res) => {
   try {
@@ -116,7 +117,13 @@ export const createProduct = async (req, res) => {
       data.price,
       data.category,
     );
-
+    const productId = response.productId;
+    await qstash.publishJSON({
+            url: process.env.QSTASH_URL,
+            body: {
+                productId,
+            },
+      });
     return res.status(201).json(response);
   } catch (error) {
     if (imagesURL.length > 0) {
