@@ -1,7 +1,7 @@
 import { algoliasearch } from "algoliasearch";
 const client = algoliasearch(
-   "TUMZPSLJFU",
-    "61cdb2992b1bc9605c6a970b8ad7a9f0"
+   process.env.ALGOLIA_APP_ID,
+    process.env.ALGOLIA_ADMIN_API_KEY
 );
 
 export const productIndexName =

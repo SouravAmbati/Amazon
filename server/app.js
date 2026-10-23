@@ -1,5 +1,5 @@
 import express from "express";
-import dotenv from "dotenv";
+import "dotenv/config";
 import connectCloudinary from "./src/config/cloudinarySetup.js";
 import UploadRouter from "./src/Modules/AdminProducts/AdminRoutes/v1/AdminProduct.route.js";
 import cors from "cors";
@@ -10,8 +10,6 @@ import OrderRouter from "./src/Modules/orders/orderRoutes/v1/orderRoutes.js";
 import UserRouter from "./src/Modules/User/UserRoutes/v1/User.route.js";
 import cookieParser from "cookie-parser";
 import Workerrouter from "./workers/workerRoutes/workerRoutes.js";
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT;
