@@ -1,3 +1,4 @@
+import  algolia,{ productIndexName } from "../../config/algolia.js";
 import pool from "../../db/connection.js";
 export async function getProductsRepository(cursor) {
   let result;
@@ -239,89 +240,57 @@ export async function getProductByFilterRepository(
     }
 
 }
+
 export async function searchProductsRepository(
     query,
     limit = 10,
     category = null
 ) {
-    const client = await pool.connect();
-
     try {
+        const trimmedQuery = query?.trim();
 
-        let result;
-
-        if (category) {
-
-            result = await client.query(
-                `
-                SELECT
-                    p.id,
-                    p.product_name,
-                    p.category,
-                    p.price,
-                    i.image_url AS images
-
-                FROM product p
-
-                INNER JOIN images i
-                    ON p.img = i.id
-
-                WHERE
-                    p.product_name ILIKE $1
-                    AND p.category = $2
-
-                ORDER BY
-                    p.product_name ASC
-
-                LIMIT $3
-                `,
-                [
-                    `%${query}%`,
-                    category,
-                    limit
-                ]
-            );
-
-        } else {
-
-            result = await client.query(
-                `
-                SELECT
-                    p.id,
-                    p.product_name,
-                    p.category,
-                    p.price,
-                    i.image_url AS images
-
-                FROM product p
-
-                INNER JOIN images i
-                    ON p.img = i.id
-
-                WHERE
-                    p.product_name ILIKE $1
-
-                ORDER BY
-                    p.product_name ASC
-
-                LIMIT $2
-                `,
-                [
-                    `%${query}%`,
-                    limit
-                ]
-            );
+        if (!trimmedQuery) {
+            return {
+                success: true,
+                data: [],
+            };
         }
 
+        const searchParams = {
+            query: trimmedQuery,
+            hitsPerPage: Math.min(
+                Math.max(Number(limit) || 10, 1),
+                20
+            ),
+        };
+
+        if (category) {
+            searchParams.facetFilters = [
+                `category:${category}`,
+            ];
+        }
+
+        // Use the initialized client, not the package function.
+        const result = await algolia.searchSingleIndex({
+            indexName: productIndexName,
+            searchParams,
+        });
+
+        const products = result.hits.map((hit) => ({
+            id: hit.productId ?? hit.objectID,
+            product_name: hit.product_name,
+            category: hit.category ?? "",
+            price: hit.price ?? null,
+            images: hit.images ?? null,
+        }));
+        
 
         return {
             success: true,
-            data: result.rows
+            data: products,
         };
-
-    } finally {
-
-        client.release();
-
+    } catch (error) {
+        console.error("Algolia product search failed:", error);
+        throw error;
     }
 }

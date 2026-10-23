@@ -100,7 +100,7 @@ export async function createProductInDB(
     const response = {
       success: true,
       message: "Product created successfully",
-      productId,
+      productId:productId,
     };
 
     await client.query(

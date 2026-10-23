@@ -1,5 +1,5 @@
 import express from "express";
-import dotenv from "dotenv";
+import "dotenv/config";
 import connectCloudinary from "./src/config/cloudinarySetup.js";
 import UploadRouter from "./src/Modules/AdminProducts/AdminRoutes/v1/AdminProduct.route.js";
 import cors from "cors";
@@ -9,8 +9,7 @@ import CartRouter from "./src/Modules/carts/cartRoutes/v1/cartRoute.js";
 import OrderRouter from "./src/Modules/orders/orderRoutes/v1/orderRoutes.js";
 import UserRouter from "./src/Modules/User/UserRoutes/v1/User.route.js";
 import cookieParser from "cookie-parser";
-
-dotenv.config();
+import Workerrouter from "./workers/workerRoutes/workerRoutes.js";
 
 const app = express();
 const port = process.env.PORT;
@@ -34,7 +33,7 @@ app.use("/api/products/v1", ProductRouter);
 app.use("/api/carts/v1", CartRouter);
 app.use("/api/orders/v1", OrderRouter);
 app.use("/api/user/v1", UserRouter);
-
+app.use("/api/workers", Workerrouter);
 app.listen(port, () => {
   console.log(`listening on port ${port}`);
 });
