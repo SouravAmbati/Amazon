@@ -13,6 +13,7 @@ import { cursorSchema } from "./AdminValidators/cursorValidator.js";
 import { deleteCloudinaryImages } from "../../utils/deleteCloudinaryImages.js";
 import { storeInactiveImages } from "../../utils/storeInactiveImages.js";
 import qstash from "../../config/qstash.js";
+import { ImplementSearch } from "../../../workers/searchService.js";
 
 export const UploadImageURL = async (req, res) => {
   try {
@@ -124,6 +125,8 @@ export const createProduct = async (req, res) => {
                 productId,
             },
       });
+    //for testing purpose
+    //ImplementSearch(productId)
     return res.status(201).json(response);
   } catch (error) {
     if (imagesURL.length > 0) {
