@@ -10,6 +10,7 @@ import OrderRouter from "./src/Modules/orders/orderRoutes/v1/orderRoutes.js";
 import UserRouter from "./src/Modules/User/UserRoutes/v1/User.route.js";
 import cookieParser from "cookie-parser";
 import Workerrouter from "./workers/workerRoutes/workerRoutes.js";
+import { stripeWebhookController } from "./src/Modules/orders/orderWebhookController.js";
 
 const app = express();
 const port = process.env.PORT;
@@ -36,6 +37,12 @@ app.use("/api/carts/v1", CartRouter);
 app.use("/api/orders/v1", OrderRouter);
 app.use("/api/user/v1", UserRouter);
 app.use("/api/workers", Workerrouter);
+
+app.post(
+    "/api/stripe/webhook",
+    express.raw({ type: "application/json" }),
+    stripeWebhookController
+);
 app.listen(port, () => {
   console.log(`listening on port ${port}`);
 });

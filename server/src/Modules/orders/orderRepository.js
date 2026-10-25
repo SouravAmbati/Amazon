@@ -1,10 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
 import pool from "../../db/connection.js";
 
+
 export async function addOrderRepository(
     productId,
     quantity,
-    userId
+    userId,
+    clearCart = true
 ) {
     const client = await pool.connect();
 
@@ -22,20 +24,20 @@ export async function addOrderRepository(
             RETURNING id, product, quantity, status, created_at, user_id`,
             [uuidv4(), productId, quantity, userId]
         );
-
-        // Delete only this user's cart item.
-        await client.query(
-            `DELETE FROM cart
-             WHERE product = $1 AND user_id = $2`,
-            [productId, userId]
-        );
+        if (clearCart) {
+            await client.query(
+                `DELETE FROM cart
+                 WHERE product = $1 AND user_id = $2`,
+                [productId, userId]
+            );
+        }
 
         await client.query("COMMIT");
 
         return {
             success: true,
-            message: "Product ordered successfully",
-            result: result.rows[0],
+            message: "Order created successfully",
+            result: result.rows[0]
         };
     } catch (error) {
         await client.query("ROLLBACK");
@@ -44,6 +46,7 @@ export async function addOrderRepository(
         client.release();
     }
 }
+
 
 export async function getOrdersRepository(userId) {
     const client = await pool.connect();

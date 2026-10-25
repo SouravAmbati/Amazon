@@ -2,27 +2,33 @@ import { addOrderRepository, getOrdersRepository, getOrderStatusRepository, upda
 
 
 
+
 export async function addOrderService(
     productId,
     quantity,
-    userId
+    userId,
+    clearCart = true
 ) {
-
     if (!productId) {
         throw new Error("Product ID is required");
     }
 
-    if (!quantity || Number(quantity) <= 0) {
-        throw new Error("Quantity must be greater than 0");
+    if (!Number.isInteger(Number(quantity)) || Number(quantity) <= 0) {
+        throw new Error("Quantity must be a positive integer");
     }
-    if (!userId) throw new Error("Authenticated user is required");
 
-    return await addOrderRepository(
+    if (!userId) {
+        throw new Error("Authenticated user is required");
+    }
+
+    return addOrderRepository(
         productId,
         Number(quantity),
-        userId
+        userId,
+        clearCart
     );
 }
+
 
 export async function getOrdersService(userId) {
     if (!userId) throw new Error("Authenticated user is required");
