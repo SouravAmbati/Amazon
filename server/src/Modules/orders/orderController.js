@@ -61,7 +61,7 @@ export const addOrderController = async (req, res) => {
 
             // Create order first
             const order =
-                await addOrderService(productId,quantity,userId);
+                await addOrderService(productId,quantity,userId,false);
 
 
             if (!order.success) {
