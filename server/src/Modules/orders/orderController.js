@@ -1,3 +1,4 @@
+import { getIO } from "../../config/socket.js";
 import { Payment } from "../../utils/StripePayment.js";
 import {
     addOrderService,
@@ -170,61 +171,31 @@ export const getOrdersController = async (req, res) => {
     }
 };
 
-export const updateOrderStatusController = async (
-    req,
-    res
-) => {
+export async function updateOrderStatusController(req, res) {
     try {
         const { orderId, status } = req.body;
 
-        if (!orderId) {
-            return res.status(400).json({
-                success: false,
-                message: "Order ID is required",
-            });
-        }
-
-        if (!status) {
-            return res.status(400).json({
-                success: false,
-                message: "Order status is required",
-            });
-        }
-
-        const response =
-            await updateOrderStatusService(
-                orderId,
-                status
-            );
-
-        return res.status(200).json(response);
-
-    } catch (error) {
-        console.error(
-            "Update order status error:",
-            error
+        const result = await updateOrderStatusService(
+            orderId,
+            status
         );
-
-        if (error.message === "Order not found") {
-            return res.status(404).json({
-                success: false,
-                message: error.message,
+        getIO()
+            .to(`order:${String(orderId)}`)
+            .emit("orderStatusUpdated", {
+                orderId: String(orderId),
+                status: result.result.status
             });
-        }
 
-        if (error.message === "Invalid order status") {
-            return res.status(400).json({
-                success: false,
-                message: error.message,
-            });
-        }
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error("Update order status error:", error);
 
-        return res.status(500).json({
+        return res.status(400).json({
             success: false,
-            message: error.message,
+            message: error.message || "Failed to update order status"
         });
     }
-};
+}
 export const getOrderStatusController = async (
     req,
     res
