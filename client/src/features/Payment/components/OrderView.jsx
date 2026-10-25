@@ -20,6 +20,7 @@ import {
 import {
     ProductContext
 } from "../../../contexts/ProductContext.jsx";
+import socket from "../../../config/socketClient.js";
 
 const OrderView = () => {
     const {
@@ -35,6 +36,7 @@ const OrderView = () => {
     const [error, setError] = useState(null);
 
     // FETCH ORDER
+
     const fetchOrder = async () => {
         try {
             const response = await getOrderStatus(orderId);
@@ -57,6 +59,82 @@ const OrderView = () => {
             setLoading(false);
         }
     };
+
+    // Initial HTTP fetch, then listen for live status changes.
+    useEffect(() => {
+        if (!orderId) return;
+
+        let active = true;
+
+        const loadInitialOrder = async () => {
+            try {
+                const response = await getOrderStatus(orderId);
+
+                if (!active) return;
+
+                if (!response.success) {
+                    throw new Error(
+                        response.message || "Failed to fetch order"
+                    );
+                }
+
+                setOrder(response.data);
+                setError(null);
+            } catch (error) {
+                if (!active) return;
+
+                console.error("Order fetch error:", error);
+                setError(
+                    error.message || "Failed to fetch order"
+                );
+            } finally {
+                if (active) setLoading(false);
+            }
+        };
+
+        const joinRoom = () => {
+            socket.emit("joinOrder", String(orderId));
+        };
+
+        const handleOrderStatusUpdated = (update) => {
+            if (String(update.orderId) !== String(orderId)) {
+                return;
+            }
+
+            setOrder((currentOrder) => {
+                if (!currentOrder) return currentOrder;
+
+                return {
+                    ...currentOrder,
+                    status: update.status
+                };
+            });
+        };
+
+        socket.on("connect", joinRoom);
+        socket.on("orderStatusUpdated", handleOrderStatusUpdated);
+
+        if (socket.connected) {
+            joinRoom();
+        }
+
+        loadInitialOrder();
+
+        return () => {
+            active = false;
+
+            socket.off("connect", joinRoom);
+            socket.off(
+                "orderStatusUpdated",
+                handleOrderStatusUpdated
+            );
+
+            if (socket.connected) {
+                socket.emit("leaveOrder", String(orderId));
+            }
+        };
+    }, [orderId, getOrderStatus]);
+
 
     // INITIAL FETCH + POLLING
     useEffect(() => {
@@ -185,16 +263,15 @@ const OrderView = () => {
                         <span
                             className={`
                                 px-4 py-2 rounded-full text-sm font-medium
-                                ${
-                                    isCancelled
-                                        ? "bg-red-50 text-red-700"
-                                        : status === "delivered"
+                                ${isCancelled
+                                    ? "bg-red-50 text-red-700"
+                                    : status === "delivered"
                                         ? "bg-green-50 text-green-700"
                                         : status === "confirmed"
-                                        ? "bg-blue-50 text-blue-700"
-                                        : status === "shipped"
-                                        ? "bg-purple-50 text-purple-700"
-                                        : "bg-yellow-50 text-yellow-700"
+                                            ? "bg-blue-50 text-blue-700"
+                                            : status === "shipped"
+                                                ? "bg-purple-50 text-purple-700"
+                                                : "bg-yellow-50 text-yellow-700"
                                 }
                             `}
                         >
@@ -239,10 +316,9 @@ const OrderView = () => {
                                                 className={`
                                                     flex h-10 w-10 shrink-0 items-center justify-center
                                                     rounded-full sm:h-11 sm:w-11
-                                                    ${
-                                                        completed
-                                                            ? "bg-black text-white"
-                                                            : "border border-gray-300 bg-white text-gray-400"
+                                                    ${completed
+                                                        ? "bg-black text-white"
+                                                        : "border border-gray-300 bg-white text-gray-400"
                                                     }
                                                 `}
                                             >
@@ -255,10 +331,9 @@ const OrderView = () => {
                                                     mt-3 w-full px-1 text-center
                                                     text-[10px] leading-tight
                                                     sm:text-xs sm:leading-snug
-                                                    ${
-                                                        completed
-                                                            ? "font-medium text-gray-900"
-                                                            : "text-gray-400"
+                                                    ${completed
+                                                        ? "font-medium text-gray-900"
+                                                        : "text-gray-400"
                                                     }
                                                 `}
                                                 style={{
