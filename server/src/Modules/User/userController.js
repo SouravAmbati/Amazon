@@ -1,35 +1,59 @@
+
 import {
     signupService,
     loginService,
+    refreshSessionService,
+    logoutService,
     getCurrentUserService,
 } from "./user.Service.js";
 
-const cookieOptions = {
+const refreshCookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 24 * 60 * 60 * 1000,
-    path: "/",
+    maxAge:
+        Number(process.env.REFRESH_TOKEN_DAYS || 7) *
+        24 * 60 * 60 * 1000,
+    path: "/api/user/v1",
 };
 
-const clearCookieOptions = {
+const clearRefreshCookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/",
+    path: "/api/user/v1",
+};
+
+const sendAuthResponse = (
+    res,
+    statusCode,
+    message,
+    result
+) => {
+    res.cookie(
+        "refreshToken",
+        result.refreshToken,
+        refreshCookieOptions
+    );
+
+    return res.status(statusCode).json({
+        success: true,
+        message,
+        user: result.user,
+        accessToken: result.accessToken,
+    });
 };
 
 export const signupController = async (req, res) => {
     try {
-        const { user, token } = await signupService(req.body);
+        const result = await signupService(req.body);
 
-        res.cookie("token", token, cookieOptions);
-
-        return res.status(201).json({
-            success: true,
-            message: "Account created successfully",
-            user,
-        });
+        return sendAuthResponse(
+            res,
+            201,
+            "Account created successfully",
+            result
+        );
     } catch (error) {
         if (error.code === "23505") {
             return res.status(409).json({
@@ -56,15 +80,14 @@ export const signupController = async (req, res) => {
 
 export const loginController = async (req, res) => {
     try {
-        const { user, token } = await loginService(req.body);
+        const result = await loginService(req.body);
 
-        res.cookie("token", token, cookieOptions);
-
-        return res.status(200).json({
-            success: true,
-            message: "Login successful",
-            user,
-        });
+        return sendAuthResponse(
+            res,
+            200,
+            "Login successful",
+            result
+        );
     } catch (error) {
         if (error.statusCode) {
             return res.status(error.statusCode).json({
@@ -82,6 +105,44 @@ export const loginController = async (req, res) => {
     }
 };
 
+export const refreshController = async (req, res) => {
+    try {
+        const result = await refreshSessionService(
+            req.cookies?.refreshToken
+        );
+
+        res.cookie(
+            "refreshToken",
+            result.refreshToken,
+            refreshCookieOptions
+        );
+
+        return res.status(200).json({
+            success: true,
+            accessToken: result.accessToken,
+        });
+    } catch (error) {
+        res.clearCookie(
+            "refreshToken",
+            clearRefreshCookieOptions
+        );
+
+        if (error.statusCode === 401) {
+            return res.status(401).json({
+                success: false,
+                message: "Session expired. Please log in again.",
+            });
+        }
+
+        console.error("Refresh error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Could not refresh session",
+        });
+    }
+};
+
 export const meController = async (req, res) => {
     try {
         const user = await getCurrentUserService(req.user.id);
@@ -92,8 +153,6 @@ export const meController = async (req, res) => {
         });
     } catch (error) {
         if (error.statusCode === 401) {
-            res.clearCookie("token", clearCookieOptions);
-
             return res.status(401).json({
                 success: false,
                 message: error.message,
@@ -109,11 +168,25 @@ export const meController = async (req, res) => {
     }
 };
 
-export const logoutController = (req, res) => {
-    res.clearCookie("token", clearCookieOptions);
+export const logoutController = async (req, res) => {
+    try {
+        await logoutService(req.cookies?.refreshToken);
 
-    return res.status(200).json({
-        success: true,
-        message: "Logged out successfully",
-    });
+        res.clearCookie(
+            "refreshToken",
+            clearRefreshCookieOptions
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Logged out successfully",
+        });
+    } catch (error) {
+        console.error("Logout error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Logout failed",
+        });
+    }
 };
