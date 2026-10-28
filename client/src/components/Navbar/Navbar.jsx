@@ -13,7 +13,7 @@ import {
     FaSignOutAlt
 } from "react-icons/fa";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate,useLocation  } from "react-router-dom";
 
 import { ProductContext } from "../../contexts/ProductContext.jsx";
 
@@ -23,6 +23,10 @@ const Navbar = ({ products = [], show = true, filter }) => {
     const [searchResults, setSearchResults] = useState([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const [searchError, setSearchError] = useState("");
+    const location = useLocation();
+
+    const isSpecificCategoryPage =
+        location.pathname === "/product";
 
     const { cartCount, user, logout, searchProducts } =
         useContext(ProductContext);
@@ -137,7 +141,7 @@ const Navbar = ({ products = [], show = true, filter }) => {
                 </div>
 
                 {/* CENTER: SEARCH */}
-                {show && (
+                {show && !isSpecificCategoryPage && (
                     <div className="order-3 mt-2 w-full min-w-0 md:order-2 md:mx-6 md:mt-0 md:flex-1">
                         <div className="relative mx-auto w-full max-w-3xl">
 
