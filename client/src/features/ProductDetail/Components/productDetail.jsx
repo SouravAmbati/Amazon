@@ -83,7 +83,9 @@ const ProductDetails = () => {
 
   const product = productDetail;
   const images = product.images || [];
-  const colors = product.colors || [];
+  const colors = Array.isArray(product.colors)
+  ? product.colors.flat(Infinity)
+  : [];
   const sizes = product.sizes || [];
 
   const productName = product.product_name;
