@@ -6,8 +6,9 @@ import {
     useState,
 } from "react";
 import axios from "axios";
-axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
-axios.defaults.withCredentials = true;
+import api, { setAccessToken, clearAccessToken } from "../api/api.js";
+api.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
+api.defaults.withCredentials = true;
 export const ProductContext = createContext();
 export const ProductProvider = ({ children }) => {
     // =====================================================
@@ -20,6 +21,37 @@ export const ProductProvider = ({ children }) => {
     // Authentication
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
+    useEffect(() => {
+        let cancelled = false;
+
+        const restoreSession = async () => {
+            try {
+                // If access token is missing, api's interceptor attempts
+                // the refresh-cookie flow after this request gets a 401.
+                const response = await api.get("/api/user/v1/me");
+
+                if (!cancelled) {
+                    setUser(response.data.user);
+                }
+            } catch {
+                clearAccessToken();
+
+                if (!cancelled) {
+                    setUser(null);
+                }
+            } finally {
+                if (!cancelled) {
+                    setAuthLoading(false);
+                }
+            }
+        };
+
+        restoreSession();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
     // Product detail
     const [productDetail, setProductDetail] = useState(null);
     const [productDetailLoading, setProductDetailLoading] =
@@ -51,7 +83,7 @@ export const ProductProvider = ({ children }) => {
                     url += `?cursor=${nextCursor}`;
                 }
                 console.log("Fetching products:", url);
-                const response = await axios.get(url);
+                const response = await api.get(url);
                 const result = response.data;
                 console.log("Products API response:", result);
                 if (!result.success) {
@@ -98,7 +130,7 @@ export const ProductProvider = ({ children }) => {
 
                 console.log("Fetching product:", productid);
 
-                const response = await axios.get(
+                const response = await api.get(
                     `/api/products/v1/product?productid=${productid}`
                 );
 
@@ -196,7 +228,7 @@ export const ProductProvider = ({ children }) => {
                     type,
                     limit
                 );
-                const response = await axios.get(
+                const response = await api.get(
                     "/api/products/v1/category",
                     {
                         params: {
@@ -249,7 +281,7 @@ export const ProductProvider = ({ children }) => {
                     limit,
                     price,
                 });
-                const response = await axios.get(
+                const response = await api.get(
                     "/api/products/v1/filter",
                     {
                         params: {
@@ -303,7 +335,7 @@ export const ProductProvider = ({ children }) => {
         }
         try {
             setCartLoading(true);
-            const response = await axios.get("/api/carts/v1/cart");
+            const response = await api.get("/api/carts/v1/cart");
             const result = response.data;
             if (!result.success) {
                 throw new Error(
@@ -345,7 +377,7 @@ export const ProductProvider = ({ children }) => {
                         message: "Please login to add products to your cart.",
                     };
                 }
-                const response = await axios.post(
+                const response = await api.post(
                     `/api/carts/v1/cart?productId=${productId}`,
                     {
                         counts,
@@ -385,7 +417,7 @@ export const ProductProvider = ({ children }) => {
     const removeFromCart = useCallback(
         async (productId) => {
             try {
-                const response = await axios.delete(
+                const response = await api.delete(
                     `/api/carts/v1/cart?productId=${productId}`
                 );
                 const result = response.data;
@@ -424,7 +456,7 @@ export const ProductProvider = ({ children }) => {
                 if (counts <= 0) {
                     return await removeFromCart(productId);
                 }
-                const response = await axios.put(
+                const response = await api.put(
                     `/api/carts/v1/cart?productId=${productId}`,
                     {
                         counts,
@@ -499,7 +531,7 @@ export const ProductProvider = ({ children }) => {
                         message: "Please login before placing an order.",
                     };
                 }
-                const response = await axios.post(
+                const response = await api.post(
                     "/api/orders/v1/order",
                     {
                         productId,
@@ -544,7 +576,7 @@ export const ProductProvider = ({ children }) => {
     // =====================================================
     const getOrders = useCallback(async () => {
         try {
-            const response = await axios.get(
+            const response = await api.get(
                 "/api/orders/v1/orders"
             );
             const result = response.data;
@@ -579,7 +611,7 @@ export const ProductProvider = ({ children }) => {
     // =====================================================
     const getOrderStatus = useCallback(async (orderId) => {
         try {
-            const response = await axios.get(
+            const response = await api.get(
                 "/api/orders/v1/order/status",
                 {
                     params: {
@@ -623,7 +655,7 @@ export const ProductProvider = ({ children }) => {
                         data: [],
                     };
                 }
-                const response = await axios.get(
+                const response = await api.get(
                     "/api/products/v1/search",
                     {
                         params: {
@@ -668,7 +700,7 @@ export const ProductProvider = ({ children }) => {
     // =====================================================
     const checkAuth = useCallback(async () => {
         try {
-            const response = await axios.get("/api/user/v1/me");
+            const response = await api.get("/api/user/v1/me");
             if (response.data.success) {
                 setUser(response.data.user);
                 return {
@@ -700,7 +732,7 @@ export const ProductProvider = ({ children }) => {
 
         const loadCurrentUser = async () => {
             try {
-                const response = await axios.get("/api/user/v1/me");
+                const response = await api.get("/api/user/v1/me");
                 if (cancelled) return;
 
                 if (response.data?.success) {
@@ -728,83 +760,94 @@ export const ProductProvider = ({ children }) => {
         return () => { cancelled = true; };
     }, []);
 
-    // =====================================================
-    // SIGNUP
-    // =====================================================
-    const signup = useCallback(
-        async (username, email, password) => {
-            try {
-                const response = await axios.post(
-                    "/api/user/v1/signup",
-                    {
-                        username,
-                        email,
-                        password,
-                    }
-                );
-                if (!response.data.success) {
-                    throw new Error(
-                        response.data.message || "Signup failed"
-                    );
-                }
-                setUser(response.data.user);
-                return {
-                    success: true,
-                    user: response.data.user,
-                };
-            } catch (error) {
+
+    const signup = async (username, email, password) => {
+        try {
+            const response = await api.post("/api/user/v1/signup", {
+                username,
+                email,
+                password,
+            });
+
+            const { success, user, accessToken, message } =
+                response.data;
+
+            if (!success || !accessToken) {
                 return {
                     success: false,
-                    message:
-                        error.response?.data?.message ||
-                        error.message ||
-                        "Signup failed",
+                    message: message || "Signup failed",
                 };
             }
-        },
-        []
-    );
-    // =====================================================
-    // LOGIN
-    // =====================================================
-    const login = useCallback(
-        async (email, password) => {
-            try {
-                const response = await axios.post(
-                    "/api/user/v1/login",
-                    {
-                        email,
-                        password,
-                    }
-                );
-                if (!response.data.success) {
-                    throw new Error(
-                        response.data.message || "Login failed"
-                    );
-                }
-                setUser(response.data.user);
-                return {
-                    success: true,
-                    user: response.data.user,
-                };
-            } catch (error) {
+
+            // Keep the access token in memory.
+            setAccessToken(accessToken);
+
+            // Update your existing user state.
+            setUser(user);
+
+            return {
+                success: true,
+                user,
+                message,
+            };
+        } catch (error) {
+            clearAccessToken();
+
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Unable to create account",
+            };
+        }
+    };
+
+    const login = async (email, password) => {
+        try {
+            const response = await api.post("/api/user/v1/login", {
+                email,
+                password,
+            });
+
+            const { success, user, accessToken, message } =
+                response.data;
+
+            if (!success || !accessToken) {
                 return {
                     success: false,
-                    message:
-                        error.response?.data?.message ||
-                        error.message ||
-                        "Login failed",
+                    message: message || "Login failed",
                 };
             }
-        },
-        []
-    );
+
+            // Keep the access token in memory.
+            setAccessToken(accessToken);
+
+            // Update your existing user state.
+            setUser(user);
+
+            return {
+                success: true,
+                user,
+                message,
+            };
+        } catch (error) {
+            clearAccessToken();
+
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Unable to login",
+            };
+        }
+    };
+
     // =====================================================
     // LOGOUT
     // =====================================================
     const logout = useCallback(async () => {
         try {
-            await axios.post("/api/user/v1/logout");
+            await api.post("/api/user/v1/logout");
             return {
                 success: true,
             };

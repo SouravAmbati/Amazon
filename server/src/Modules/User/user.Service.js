@@ -1,12 +1,28 @@
+
 import bcrypt from "bcrypt";
 import { randomUUID } from "node:crypto";
 
+import {
+    createUser,
+    findUserByEmail,
+    findUserById,
+    saveRefreshToken,
+    rotateRefreshTokenRepository,
+    revokeRefreshTokenRepository,
+} from "./user.Repository.js";
 
+import {
+    createToken,
+    createRefreshToken,
+    hashRefreshToken,
+} from "../../utils/createToken.js";
 
-import { createUser, findUserByEmail, findUserById } from "./user.Repository.js";
-import { createToken } from "../../utils/createToken.js";
+const REFRESH_DAYS = Number(
+    process.env.REFRESH_TOKEN_DAYS || 7
+);
 
-const normalizeEmail = (email) => email.trim().toLowerCase();
+const normalizeEmail = (email) =>
+    email.trim().toLowerCase();
 
 const isValidEmail = (email) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -16,6 +32,24 @@ const publicUser = (user) => ({
     user_name: user.user_name,
     user_email: user.user_email,
 });
+
+const issueTokenPair = async (user) => {
+    const accessToken = createToken(user);
+    const refreshToken = createRefreshToken();
+    const tokenHash = hashRefreshToken(refreshToken);
+
+    const expiresAt = new Date(
+        Date.now() + REFRESH_DAYS * 24 * 60 * 60 * 1000
+    );
+
+    await saveRefreshToken(
+        user.id,
+        tokenHash,
+        expiresAt
+    );
+
+    return { accessToken, refreshToken };
+};
 
 export const signupService = async ({
     username,
@@ -39,10 +73,13 @@ export const signupService = async ({
 
     const normalizedEmail = normalizeEmail(email);
 
-    const existingUser = await findUserByEmail(normalizedEmail);
+    const existingUser =
+        await findUserByEmail(normalizedEmail);
 
     if (existingUser) {
-        const error = new Error("Email is already registered");
+        const error = new Error(
+            "Email is already registered"
+        );
         error.statusCode = 409;
         throw error;
     }
@@ -56,39 +93,100 @@ export const signupService = async ({
         hashedPassword,
     });
 
+    const tokens = await issueTokenPair(user);
+
     return {
         user,
-        token: createToken(user),
+        ...tokens,
     };
 };
 
-export const loginService = async ({ email, password }) => {
+export const loginService = async ({
+    email,
+    password,
+}) => {
     if (
         typeof email !== "string" ||
         typeof password !== "string" ||
         !isValidEmail(email.trim()) ||
         !password
     ) {
-        const error = new Error("Email and password are required");
+        const error = new Error(
+            "Email and password are required"
+        );
         error.statusCode = 400;
         throw error;
     }
 
-    const user = await findUserByEmail(normalizeEmail(email));
+    const user = await findUserByEmail(
+        normalizeEmail(email)
+    );
 
     if (
         !user ||
-        !(await bcrypt.compare(password, user.user_password))
+        !(await bcrypt.compare(
+            password,
+            user.user_password
+        ))
     ) {
-        const error = new Error("Invalid email or password");
+        const error = new Error(
+            "Invalid email or password"
+        );
+        error.statusCode = 401;
+        throw error;
+    }
+
+    const safeUser = publicUser(user);
+    const tokens = await issueTokenPair(safeUser);
+
+    return {
+        user: safeUser,
+        ...tokens,
+    };
+};
+
+export const refreshSessionService = async (
+    oldRefreshToken
+) => {
+    if (!oldRefreshToken) {
+        const error = new Error("Refresh token missing");
+        error.statusCode = 401;
+        throw error;
+    }
+
+    const newRefreshToken = createRefreshToken();
+
+    const expiresAt = new Date(
+        Date.now() + REFRESH_DAYS * 24 * 60 * 60 * 1000
+    );
+
+    const { userId } =
+        await rotateRefreshTokenRepository(
+            hashRefreshToken(oldRefreshToken),
+            hashRefreshToken(newRefreshToken),
+            expiresAt
+        );
+
+    const user = await findUserById(userId);
+
+    if (!user) {
+        const error = new Error("User no longer exists");
         error.statusCode = 401;
         throw error;
     }
 
     return {
-        user: publicUser(user),
-        token: createToken(publicUser(user)),
+        accessToken: createToken(user),
+        refreshToken: newRefreshToken,
     };
+};
+
+export const logoutService = async (refreshToken) => {
+    if (!refreshToken) return;
+
+    await revokeRefreshTokenRepository(
+        hashRefreshToken(refreshToken)
+    );
 };
 
 export const getCurrentUserService = async (userId) => {
