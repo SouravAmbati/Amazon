@@ -22,14 +22,6 @@ export async function CompletePaidOrder(orderId) {
 
     order = result.rows[0];
 
-    // Mark the order as paid.
-    await client.query(
-      `UPDATE orders
-             SET status = 'paid'
-             WHERE id = $1`,
-      [orderId],
-    );
-
     // Delete only this user's purchased product.
     await client.query(
       `DELETE FROM cart

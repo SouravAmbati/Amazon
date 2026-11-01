@@ -1,4 +1,5 @@
 import { getIO } from "../../config/socket.js";
+import { CompletePaidOrder } from "../../utils/orderPaymentService.js";
 import { Payment } from "../../utils/StripePayment.js";
 import {
     addOrderService,
@@ -115,6 +116,9 @@ export const addOrderController = async (req, res) => {
                     quantity,
                     userId
                 );
+            if(response){
+                CompletePaidOrder(response.result.id);
+            }
 
 
             return res
